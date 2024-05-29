@@ -15,8 +15,19 @@ class Ball:
         radius (int): Radius.
         color (str): Color.
     """
+
     def __init__(self, pos, v, theta, radius, color):
-        self.pos = pos
+        """Initialize.
+
+        Args:
+            pos (pygame.Vector2): Initial position (x, y).
+            v (float): Magnitude of an initial velocity.
+            theta (float): Angle of an initial velocity.
+            radius (int): Radius.
+            color (str): Color.
+        """
+
+        self.pos = pos.copy()
         self.v = pygame.Vector2(
             v * math.cos(theta), v * math.sin(theta)
         )
@@ -31,10 +42,12 @@ class Ball:
             dt (float): Elapsed time[sec] from the previous frame.
         """
 
+        # Projectile motion
         self.pos.x += self.v.x * dt
         self.pos.y += self.v.y * dt
 
-        self.v.y += (9.81 * 10) * dt
+        # Gravity
+        self.v.y += (9.8 * 10) * dt
 
         # Stop at the screen's edge
         if (self.pos.x + self.radius) >= screen.get_width() or \
@@ -52,6 +65,19 @@ class Ball:
         pygame.draw.circle(screen, self.color, self.pos, self.radius)
 
 
+def deg2rad(deg):
+    """Convert an angle from degree to radian.
+
+    Args:
+        deg (float): Angle[deg].
+
+    Return:
+        (float): Angle[rad].
+    """
+
+    return deg / 180 * math.pi
+
+
 def main():
     """Main loop."""
 
@@ -59,11 +85,15 @@ def main():
 
     screen = pygame.display.set_mode((640, 480))
 
-    pos = pygame.Vector2(10, screen.get_height() - 10)
+    radius = 5
+    pos = pygame.Vector2(radius + 1, screen.get_height() - (radius + 1))
     v = 300
+
+    # 3 balls projected to different angles
     balls = [
-        Ball(pos, v, -random.uniform(0, 90) / 180 * math.pi, 5, "green"),
-        Ball(pos, v, -random.uniform(0, 90) / 180 * math.pi, 5, "red"),
+        Ball(pos, v, deg2rad(-random.uniform(0, 90)), radius, "green"),
+        Ball(pos, v, deg2rad(-random.uniform(0, 90)), radius, "red"),
+        Ball(pos, v, deg2rad(-random.uniform(0, 90)), radius, "blue"),
     ]
 
     clock = pygame.time.Clock()
