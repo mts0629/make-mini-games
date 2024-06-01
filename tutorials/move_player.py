@@ -13,8 +13,7 @@ class Player:
         pos (pygame.Vector2): Position (x, y).
         v (pygame.Vector2): Velocity (x, y).
         speed (float): Moving speed.
-        radius (int): Radius.
-        color (str): Color.
+        radius (int): Radius (size of the player).
     """
 
     def __init__(self, pos):
@@ -28,7 +27,6 @@ class Player:
         self.speed = 200
         self.v = pygame.Vector2(0, 0)
         self.radius = 20
-        self.color = "green"
 
     def move(self, screen, dt):
         """Move on the screen.
@@ -39,6 +37,7 @@ class Player:
         """
         self.v = pygame.Vector2(0, 0)
 
+        # Change the direction by the key inputs
         # Upper/lower
         if pygame.key.get_pressed()[pygame.K_w]:
             self.v.y = -1
@@ -50,19 +49,21 @@ class Player:
         elif pygame.key.get_pressed()[pygame.K_d]:
             self.v.x = 1
 
+        # Normalize the velocity
+        mag = self.v.magnitude()
+        if mag > 1:
+            self.v = self.v.clamp_magnitude(1)
+
         # Move the player
-        self.pos += self.speed * self.v  * dt
+        self.pos += self.speed * self.v * dt
 
         # Stop at the screen's edge
-        if self.pos.x < self.radius:
-            self.pos.x = self.radius
-        if self.pos.x > (screen.get_width() - self.radius):
-            self.pos.x = screen.get_width() - self.radius
-
-        if self.pos.y < self.radius:
-            self.pos.y = self.radius
-        if  self.pos.y > (screen.get_width() - self.radius):
-            self.pos.y = screen.get_width() - self.radius
+        self.pos.x = pygame.math.clamp(
+            self.pos.x, self.radius, screen.get_width() - self.radius
+        )
+        self.pos.y = pygame.math.clamp(
+            self.pos.y, self.radius, screen.get_height() - self.radius
+        )
 
     def draw(self, screen):
         """Draw on the screen.
@@ -70,21 +71,14 @@ class Player:
         Args:
             screen (pygame.Surface): Drawing screen.
         """
+        # Body
+        pygame.draw.circle(screen, "green", self.pos, self.radius)
 
-        pygame.draw.circle(screen, self.color, self.pos, self.radius)
-
-
-def deg2rad(deg):
-    """Convert an angle from degree to radian.
-
-    Args:
-        deg (float): Angle[deg].
-
-    Return:
-        (float): Angle[rad].
-    """
-
-    return deg / 180 * math.pi
+        # Eyes
+        eye_pos = [(-5, 0), (5, 0)]
+        # Move along with the player's direction
+        for pos in eye_pos:
+            pygame.draw.circle(screen, "black", self.pos + self.v * 5 + pos, 3)
 
 
 def main():
@@ -93,6 +87,13 @@ def main():
     pygame.init()
 
     screen = pygame.display.set_mode((640, 480))
+
+    # Help text
+    font = pygame.font.Font(pygame.font.get_default_font(), 20)
+    help_text = font.render(
+        "[W] Up/[S] Down/[A] Left/[D] Right/[ESC] Quit",
+        True, (255, 255, 255)
+    )
 
     player = Player(
         pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
@@ -115,6 +116,8 @@ def main():
 
         player.move(screen, dt)
         player.draw(screen)
+
+        screen.blit(help_text, (5, 5))
 
         pygame.display.flip()
 
