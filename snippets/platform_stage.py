@@ -69,6 +69,35 @@ class Player:
         if self.pos.y == screen.get_height() - self.radius:
             self.jumping = False
 
+    def check_collision(self, objective):
+        """Check whether the player collides with an objective.
+
+        Args:
+            objective (Platform): Objective to be checked.
+
+        Returns:
+            (bool): Flag, True if the player collides with the objective.
+        """
+        player_l = self.pos.x - self.radius
+        player_r = self.pos.x + self.radius
+        player_u = self.pos.y - self.radius
+        player_d = self.pos.y + self.radius
+
+        objective_l = objective.pos.x - objective.width / 2
+        objective_r = objective.pos.x + objective.width / 2
+        objective_u = objective.pos.y - objective.height / 2
+        objective_d = objective.pos.y + objective.height / 2
+
+        if player_r > objective_l:
+            if player_d > objective_u or player_u < objective_d:
+                return True
+        elif player_l < objective_r:
+            if player_d > objective_u or player_u < objective_d:
+                return True
+
+        return False
+
+
     def draw(self, screen):
         """Draw on the screen.
 
@@ -160,10 +189,11 @@ def main():
         
         screen.fill("black")
 
+        player.move(screen, dt)
+
         for platform in platforms:
             platform.draw(screen)
 
-        player.move(screen, dt)
         player.draw(screen)
 
         screen.blit(help_text, (5, 5))
