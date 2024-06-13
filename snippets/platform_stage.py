@@ -61,9 +61,9 @@ class Player:
         self.pos.x = pygame.math.clamp(
             self.pos.x, self.radius, screen.get_width() - self.radius
         )
-        self.pos.y = pygame.math.clamp(
-            self.pos.y, self.radius, screen.get_height() - self.radius
-        )
+        # self.pos.y = pygame.math.clamp(
+        #     self.pos.y, self.radius, screen.get_height() - self.radius
+        # )
 
         # Stop falling at the bottom of the screen
         if self.pos.y == screen.get_height() - self.radius:
@@ -88,12 +88,18 @@ class Player:
         objective_u = objective.pos.y - objective.height / 2
         objective_d = objective.pos.y + objective.height / 2
 
-        if player_r > objective_l:
-            if player_d > objective_u or player_u < objective_d:
-                return True
-        elif player_l < objective_r:
-            if player_d > objective_u or player_u < objective_d:
-                return True
+        # Collision by rectangles
+        # L      R
+        # +------+ U
+        # |      |
+        # |    +-|------+
+        # +------+ D    |
+        #      |        |
+        #      +--------+
+
+        if ((objective_l < player_r < objective_r) or (objective_l < player_l < objective_r)) and \
+           ((objective_u < player_u < objective_d) or (objective_u < player_d < objective_d)):
+           return True
 
         return False
 
@@ -167,11 +173,17 @@ def main():
         pygame.Vector2(screen.get_width() / 2, screen.get_height() - 10)
     )
 
+    S_WIDTH = screen.get_width()
+    S_HEIGHT = screen.get_height()
+
     # Platforms
     platforms = [
-        Platform(pygame.Vector2(screen.get_width() / 2 - 200, screen.get_height() - 300), 150, 30),
-        Platform(pygame.Vector2(screen.get_width() / 2, screen.get_height() - 150), 200, 30),
-        Platform(pygame.Vector2(screen.get_width() / 2 + 200, screen.get_height() - 300), 150, 30)
+        Platform(pygame.Vector2(S_WIDTH / 2, S_HEIGHT + 5), S_WIDTH, 10),  # Floor
+        Platform(pygame.Vector2(-5, S_HEIGHT / 2), 10, S_HEIGHT),  # Left wall
+        Platform(pygame.Vector2(S_WIDTH + 5, S_HEIGHT / 2), 10, S_HEIGHT),  # Right wall
+        Platform(pygame.Vector2(S_WIDTH / 2 - 200, S_HEIGHT - 300), 150, 30),
+        Platform(pygame.Vector2(S_WIDTH / 2, S_HEIGHT - 150), 200, 30),
+        Platform(pygame.Vector2(S_WIDTH / 2 + 200, S_HEIGHT - 300), 150, 30)
     ]
 
     clock = pygame.time.Clock()
@@ -189,9 +201,14 @@ def main():
         
         screen.fill("black")
 
+        prev_pos = player.pos.copy()
+
         player.move(screen, dt)
 
         for platform in platforms:
+            if player.check_collision(platform):
+                if prev_pos.y < platform.pos.y:
+                    player.jumping = False
             platform.draw(screen)
 
         player.draw(screen)
