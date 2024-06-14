@@ -94,13 +94,10 @@ def main():
     # Help text
     font = pygame.font.Font(pygame.font.get_default_font(), 20)
     help_text = font.render(
-        "[W] Jump/[A] Left/[D] Right/[ESC] Quit",
-        True, (255, 255, 255)
+        "[W] Jump/[A] Left/[D] Right/[ESC] Quit", True, (255, 255, 255)
     )
 
-    player = Player(
-        pygame.Vector2(screen.get_width() / 2, screen.get_height() - 10)
-    )
+    player = Player(pygame.Vector2(screen.get_width() / 2, screen.get_height() - 10))
 
     clock = pygame.time.Clock()
     dt = 0
@@ -114,7 +111,7 @@ def main():
         # Quit game by the ESC key
         if pygame.key.get_pressed()[pygame.K_ESCAPE]:
             running = False
-        
+
         screen.fill("black")
 
         player.move(screen, dt)

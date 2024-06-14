@@ -12,9 +12,7 @@ dt = 0
 running = True
 
 # Player's position
-player_pos = pygame.Vector2(
-    screen.get_width() / 2, screen.get_height() / 2
-)
+player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
 
 while running:
     for event in pygame.event.get():

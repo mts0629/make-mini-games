@@ -15,6 +15,7 @@ class Ball:
         radius (int): Radius.
         color (str): Color.
     """
+
     def __init__(self, pos, v, radius, color):
         self.pos = pos
         self.v = v
@@ -33,11 +34,13 @@ class Ball:
         self.pos.y += self.v.y * dt
 
         # Reflect at the screen's edges
-        if (self.pos.x + self.radius) > screen.get_width() or \
-           (self.pos.x - self.radius) < 0:
+        if (self.pos.x + self.radius) > screen.get_width() or (
+            self.pos.x - self.radius
+        ) < 0:
             self.v.x *= -1
-        if (self.pos.y + self.radius) > screen.get_height() or \
-           (self.pos.y - self.radius) < 0:
+        if (self.pos.y + self.radius) > screen.get_height() or (
+            self.pos.y - self.radius
+        ) < 0:
             self.v.y *= -1
 
     def draw(self, screen):
@@ -60,15 +63,11 @@ def main():
     theta = random.uniform(0, 2 * math.pi)
 
     ball = Ball(
-        pos = pygame.Vector2(
-            screen.get_width() / 2, screen.get_height() / 2
-        ),
+        pos=pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2),
         # Initialize with random direction
-        v = pygame.Vector2(
-            400 * math.cos(theta), 400 * math.sin(theta)
-        ),
-        radius = 20,
-        color = "green",
+        v=pygame.Vector2(400 * math.cos(theta), 400 * math.sin(theta)),
+        radius=20,
+        color="green",
     )
 
     clock = pygame.time.Clock()
@@ -79,7 +78,7 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-        
+
         screen.fill("black")
 
         ball.draw(screen)

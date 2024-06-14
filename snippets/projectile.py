@@ -28,9 +28,7 @@ class Ball:
         """
 
         self.pos = pos.copy()
-        self.v = pygame.Vector2(
-            v * math.cos(theta), v * math.sin(theta)
-        )
+        self.v = pygame.Vector2(v * math.cos(theta), v * math.sin(theta))
         self.radius = radius
         self.color = color
 
@@ -50,8 +48,9 @@ class Ball:
         self.v.y += (9.8 * 10) * dt
 
         # Stop at the screen's edge
-        if (self.pos.x + self.radius) >= screen.get_width() or \
-           (self.pos.y + self.radius) >= screen.get_height():
+        if (self.pos.x + self.radius) >= screen.get_width() or (
+            self.pos.y + self.radius
+        ) >= screen.get_height():
             self.v.x = 0
             self.v.y = 0
 
@@ -104,7 +103,7 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-        
+
         screen.fill("black")
 
         for ball in balls:
