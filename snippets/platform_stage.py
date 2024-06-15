@@ -15,6 +15,7 @@ class Player:
         speed (float): Moving speed.
         jumping (bool): Flag, True if while jumping.
         radius (int): Radius (size of the player).
+        rect (pygame.Rect): Collision area.
     """
 
     def __init__(self, pos):
@@ -27,13 +28,49 @@ class Player:
         self.speed = 200
         self.v = pygame.Vector2(0, 0)
         self.radius = 20
+
+        self.rect = pygame.Rect(
+            self.pos.x - self.radius,
+            self.pos.y - self.radius,
+            self.radius * 2,
+            self.radius * 2,
+        )
+
         self.jumping = True
 
-    def move(self, screen, dt):
+    def check_collision(self, rect, obj):
+        """Check whether the collision area collides with that of an objective.
+
+        Args:
+            rect (pygame.Rect): Collision area.
+            obj (pygame.Rect): Collision of the objective.
+
+        Returns:
+            Tuple[bool, bool, bool, bool]: Collision flags for each directions,
+                top/bottom/left/right.
+        """
+        # Collision check by rectangles
+        # L      R
+        # +------+ T
+        # |      |
+        # |    +-|------+
+        # +------+ B    |
+        #      |        |
+        #      +--------+
+
+        top = obj.top < rect.top <= obj.bottom
+        bottom = obj.top <= rect.bottom <= obj.bottom
+        left = obj.left < rect.left <= obj.right
+        right = obj.left <= rect.right < obj.right
+
+        return (top, bottom, left, right)
+
+    def move(self, screen, platforms, dt):
         """Move on the screen.
 
         Args:
             screen (pygame.Surface): Drawing screen.
+            platforms (List[Platform]): Platforms.
             dt (float): Elapsed time[sec] from the previous frame.
         """
         if not self.jumping:
@@ -42,67 +79,39 @@ class Player:
             # If not in jumping, move a player by the key inputs
             # Jump
             if pygame.key.get_pressed()[pygame.K_w]:
-                self.v.y = -5
+                self.v.y = -4.5
                 self.jumping = True
-            # Left/right
+
+            # Move to Left/right
             if pygame.key.get_pressed()[pygame.K_a]:
                 self.v.x = -1
             elif pygame.key.get_pressed()[pygame.K_d]:
                 self.v.x = 1
         else:
             # Falling, add the G
-            self.v.y += 0.2
+            self.v.y += 0.15
 
-        # Move the player
-        prev_pos = self.pos.copy()
+        self.v = self.speed * self.v * dt
+
+        # Collisiotn check
+        for platform in platforms:
+            top, bottom, left, right = self.check_collision(self.rect, platform.rect)
+            if top or bottom:
+                if self.jumping:
+                    self.v.y = 0
+                if bottom and self.jumping:
+                    self.jumping = False
+            if (left or right) and not (top or bottom):
+                self.v.x = 0
+
+        # Move the player and collision area
         self.pos += self.speed * self.v * dt
-
-        # Stop at the screen's edge
-        self.pos.x = pygame.math.clamp(
-            self.pos.x, self.radius, screen.get_width() - self.radius
+        self.rect.update(
+            self.pos.x - self.radius,
+            self.pos.y - self.radius,
+            self.radius * 2,
+            self.radius * 2,
         )
-        # self.pos.y = pygame.math.clamp(
-        #     self.pos.y, self.radius, screen.get_height() - self.radius
-        # )
-
-        # Stop falling at the bottom of the screen
-        if self.pos.y == screen.get_height() - self.radius:
-            self.jumping = False
-
-    def check_collision(self, objective):
-        """Check whether the player collides with an objective.
-
-        Args:
-            objective (Platform): Objective to be checked.
-
-        Returns:
-            (bool): Flag, True if the player collides with the objective.
-        """
-        player_l = self.pos.x - self.radius
-        player_r = self.pos.x + self.radius
-        player_u = self.pos.y - self.radius
-        player_d = self.pos.y + self.radius
-
-        objective_l = objective.pos.x - objective.width / 2
-        objective_r = objective.pos.x + objective.width / 2
-        objective_u = objective.pos.y - objective.height / 2
-        objective_d = objective.pos.y + objective.height / 2
-
-        # Collision by rectangles
-        # L      R
-        # +------+ U
-        # |      |
-        # |    +-|------+
-        # +------+ D    |
-        #      |        |
-        #      +--------+
-
-        if ((objective_l < player_r < objective_r) or (objective_l < player_l < objective_r)) and \
-           ((objective_u < player_u < objective_d) or (objective_u < player_d < objective_d)):
-           return True
-
-        return False
-
 
     def draw(self, screen):
         """Draw on the screen.
@@ -127,7 +136,8 @@ class Platform:
         pos (pygame.Vector2): Position (x, y).
         width (int): Width.
         height (int): Height.
-        Rect (pygame.Rect): Drawn rectangle.
+        rect (pygame.Rect): Drawn rectangle and collision area.
+        color (str): Drawn color.
     """
 
     def __init__(self, pos, width, height):
@@ -141,10 +151,9 @@ class Platform:
         self.pos = pos.copy()
         self.width = width
         self.height = height
-        self.rect = pygame.Rect(
-            pos.x - width / 2, pos.y - height / 2,
-            width, height
-        )
+        self.rect = pygame.Rect(pos.x - width / 2, pos.y - height / 2, width, height)
+
+        self.color = "white"
 
     def draw(self, screen):
         """Draw on the screen.
@@ -152,7 +161,7 @@ class Platform:
         Args:
             screen (pygame.Surface): Drawing screen.
         """
-        pygame.draw.rect(screen, "white", self.rect)
+        pygame.draw.rect(screen, self.color, self.rect)
 
 
 def main():
@@ -165,13 +174,10 @@ def main():
     # Help text
     font = pygame.font.Font(pygame.font.get_default_font(), 20)
     help_text = font.render(
-        "[W] Jump/[A] Left/[D] Right/[ESC] Quit",
-        True, (255, 255, 255)
+        "[W] Jump/[A] Left/[D] Right/[ESC] Quit", True, (255, 255, 255)
     )
 
-    player = Player(
-        pygame.Vector2(screen.get_width() / 2, screen.get_height() - 10)
-    )
+    player = Player(pygame.Vector2(screen.get_width() / 2, screen.get_height() - 10))
 
     S_WIDTH = screen.get_width()
     S_HEIGHT = screen.get_height()
@@ -183,7 +189,7 @@ def main():
         Platform(pygame.Vector2(S_WIDTH + 5, S_HEIGHT / 2), 10, S_HEIGHT),  # Right wall
         Platform(pygame.Vector2(S_WIDTH / 2 - 200, S_HEIGHT - 300), 150, 30),
         Platform(pygame.Vector2(S_WIDTH / 2, S_HEIGHT - 150), 200, 30),
-        Platform(pygame.Vector2(S_WIDTH / 2 + 200, S_HEIGHT - 300), 150, 30)
+        Platform(pygame.Vector2(S_WIDTH / 2 + 200, S_HEIGHT - 300), 150, 30),
     ]
 
     clock = pygame.time.Clock()
@@ -198,17 +204,12 @@ def main():
         # Quit game by the ESC key
         if pygame.key.get_pressed()[pygame.K_ESCAPE]:
             running = False
-        
+
         screen.fill("black")
 
-        prev_pos = player.pos.copy()
-
-        player.move(screen, dt)
+        player.move(screen, platforms, dt)
 
         for platform in platforms:
-            if player.check_collision(platform):
-                if prev_pos.y < platform.pos.y:
-                    player.jumping = False
             platform.draw(screen)
 
         player.draw(screen)
