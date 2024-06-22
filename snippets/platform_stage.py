@@ -42,12 +42,12 @@ class Player:
         """Check whether the collision area collides with that of an objective.
 
         Args:
-            rect (pygame.Rect): Collision area.
+            rect (pygame.Rect): Collision area of the character.
             obj (pygame.Rect): Collision of the objective.
 
         Returns:
-            Tuple[bool, bool, bool, bool]: Collision flags for each directions,
-                top/bottom/left/right.
+            (Tuple[bool, bool, bool, bool]): Collision flags for each direction,
+                top/bottom/left/right of the character.
         """
         # Collision check by rectangles
         # L      R
@@ -57,9 +57,8 @@ class Player:
         # +------+ B    |
         #      |        |
         #      +--------+
-
         top = obj.top < rect.top <= obj.bottom
-        bottom = obj.top <= rect.bottom <= obj.bottom
+        bottom = obj.top <= rect.bottom < obj.bottom
         left = obj.left < rect.left <= obj.right
         right = obj.left <= rect.right < obj.right
 
@@ -73,45 +72,54 @@ class Player:
             platforms (List[Platform]): Platforms.
             dt (float): Elapsed time[sec] from the previous frame.
         """
+        jumping = self.jumping
+
         if not self.jumping:
             self.v = pygame.Vector2(0, 0)
 
             # If not in jumping, move a player by the key inputs
             # Jump
             if pygame.key.get_pressed()[pygame.K_w]:
-                self.v.y = -4.5
-                self.jumping = True
-
+                self.v.y = -20
+                jumping = True
             # Move to Left/right
             if pygame.key.get_pressed()[pygame.K_a]:
-                self.v.x = -1
+                self.v.x = -self.speed
             elif pygame.key.get_pressed()[pygame.K_d]:
-                self.v.x = 1
+                self.v.x = self.speed
         else:
             # Falling, add the G
-            self.v.y += 0.15
+            self.v.y += 9.8
 
-        self.v = self.speed * self.v * dt
+        # Calculate a temporal position and a collision area
+        pos = self.pos + self.v * dt
+        rect = self.rect.copy()
+        rect.move_ip(pos.x - self.radius, pos.y - self.radius)
 
-        # Collisiotn check
+        # Collision check
         for platform in platforms:
-            top, bottom, left, right = self.check_collision(self.rect, platform.rect)
-            if top or bottom:
-                if self.jumping:
-                    self.v.y = 0
-                if bottom and self.jumping:
-                    self.jumping = False
+            top, bottom, left, right = self.check_collision(rect, platform.rect)
+            # Collision on Y-axis (top/bottom)
+            if (top or bottom) and self.jumping:
+                self.v.y = 0
+                if top:
+                    pos.y = platform.rect.bottom + self.radius
+                if bottom:
+                    pos.y = platform.rect.top - self.radius
+                    jumping = False
+
+            # Collision on X-axis (left/right)
             if (left or right) and not (top or bottom):
                 self.v.x = 0
+                if left:
+                    pos.x = platform.rect.right + self.radius
+                if right:
+                    pos.x = platform.rect.left - self.radius
 
-        # Move the player and collision area
-        self.pos += self.speed * self.v * dt
-        self.rect.update(
-            self.pos.x - self.radius,
-            self.pos.y - self.radius,
-            self.radius * 2,
-            self.radius * 2,
-        )
+        # Update
+        self.pos = pos
+        self.rect.move_ip(self.pos.x - self.radius, self.pos.y - self.radius)
+        self.jumping = jumping
 
     def draw(self, screen):
         """Draw on the screen.
@@ -215,6 +223,16 @@ def main():
         player.draw(screen)
 
         screen.blit(help_text, (5, 5))
+
+        # Debug info
+        debug_text = font.render(
+            f"(x,y)=({player.pos.x:.0f},{player.pos.y:.0f}),"
+            f"(vx,vx)=({player.v.x:.2f},{player.v.y:.2f}),"
+            f"jumping={player.jumping}",
+            True,
+            (255, 255, 255),
+        )
+        screen.blit(debug_text, (5, 25))
 
         pygame.display.flip()
 
