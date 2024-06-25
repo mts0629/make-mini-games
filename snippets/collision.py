@@ -103,36 +103,52 @@ class Player:
             if (on_top or on_bottom) and (on_left or on_right):
                 if on_top and on_left and on_right:
                     # Top on the player
-                    if self.v.y < 0:
-                        self.v.y = 0
+                    self.v.y = 0
                     pos.y = platform.rect.bottom + self.radius
                 elif on_bottom and on_left and on_right:
                     # Bottom on the player
-                    if self.v.y > 0:
-                        self.v.y = 0
+                    self.v.y = 0
                     pos.y = platform.rect.top - self.radius
                 elif on_left and on_top and on_bottom:
                     # Left on the player
-                    if self.v.x < 0:
-                        self.v.x = 0
+                    self.v.x = 0
                     pos.x = platform.rect.right + self.radius
                 elif on_right and on_top and on_bottom:
                     # Right on the player
-                    if self.v.x > 0:
-                        self.v.x = 0
+                    self.v.x = 0
                     pos.x = platform.rect.left - self.radius
                 elif on_top and on_left:
                     # Upper left on the player
-                    pass
+                    if self.rect.top >= platform.rect.bottom:
+                        self.v.y = 0
+                        pos.y = platform.rect.bottom + self.radius
+                    if self.rect.left >= platform.rect.right:
+                        self.v.x = 0
+                        pos.x = platform.rect.right + self.radius
                 elif on_top and on_right:
                     # Upper right on the player
-                    pass
+                    if self.rect.top >= platform.rect.bottom:
+                        self.v.y = 0
+                        pos.y = platform.rect.bottom + self.radius
+                    if self.rect.right <= platform.rect.left:
+                        self.v.x = 0
+                        pos.x = platform.rect.left - self.radius
                 elif on_bottom and on_left:
                     # Lower left on the player
-                    pass
+                    if self.rect.bottom <= platform.rect.top:
+                        self.v.y = 0
+                        pos.y = platform.rect.top - self.radius
+                    if self.rect.left >= platform.rect.right:
+                        self.v.x = 0
+                        pos.x = platform.rect.right + self.radius
                 elif on_bottom and on_right:
                     # Lower right on the player
-                    pass
+                    if self.rect.bottom <= platform.rect.top:
+                        self.v.y = 0
+                        pos.y = platform.rect.top - self.radius
+                    if self.rect.right <= platform.rect.left:
+                        self.v.x = 0
+                        pos.x = platform.rect.left - self.radius
 
         # Update the positions
         self.pos.x = pos.x
