@@ -1,8 +1,5 @@
 """Collision check between a player and objects."""
 
-import math
-import random
-
 import pygame
 
 
@@ -13,7 +10,8 @@ class Player:
         pos (pygame.Vector2): Position (x, y).
         v (pygame.Vector2): Velocity (x, y).
         speed (float): Moving speed.
-        radius (int): Player's size.
+        width (int): Width.
+        height (int): Height.
         rect (pygame.Rect): Collision area.
         color (str): Drawn color.
     """
@@ -27,12 +25,13 @@ class Player:
         self.pos = pos.copy()
         self.speed = 200
         self.v = pygame.Vector2(0, 0)
-        self.radius = 20
+        self.width = 40
+        self.height = 40
         self.rect = pygame.Rect(
-            self.pos.x - self.radius,
-            self.pos.y - self.radius,
-            self.radius * 2,
-            self.radius * 2,
+            self.pos.x - self.width / 2,
+            self.pos.y - self.height / 2,
+            self.width,
+            self.height,
         )
         self.color = "green"
 
@@ -92,7 +91,10 @@ class Player:
         # Calculate a temporal position and a collision area
         pos = self.pos + self.v * dt
         rect = pygame.Rect(
-            pos.x - self.radius, pos.y - self.radius, self.rect.width, self.rect.height
+            pos.x - self.width / 2,
+            pos.y - self.height / 2,
+            self.rect.width,
+            self.rect.height,
         )
 
         # Collision check
@@ -101,60 +103,63 @@ class Player:
                 rect, platform.rect
             )
             if (on_top or on_bottom) and (on_left or on_right):
-                if on_top and on_left and on_right:
+                in_obj_width = on_left and on_right
+                in_obj_height = on_top and on_bottom
+
+                if on_top and in_obj_width:
                     # Top on the player
                     self.v.y = 0
-                    pos.y = platform.rect.bottom + self.radius
-                elif on_bottom and on_left and on_right:
+                    pos.y = platform.rect.bottom + self.height / 2
+                elif on_bottom and in_obj_width:
                     # Bottom on the player
                     self.v.y = 0
-                    pos.y = platform.rect.top - self.radius
-                elif on_left and on_top and on_bottom:
+                    pos.y = platform.rect.top - self.height / 2
+                elif on_left and in_obj_height:
                     # Left on the player
                     self.v.x = 0
-                    pos.x = platform.rect.right + self.radius
-                elif on_right and on_top and on_bottom:
+                    pos.x = platform.rect.right + self.width / 2
+                elif on_right and in_obj_height:
                     # Right on the player
                     self.v.x = 0
-                    pos.x = platform.rect.left - self.radius
+                    pos.x = platform.rect.left - self.width / 2
                 elif on_top and on_left:
                     # Upper left on the player
                     if self.rect.top >= platform.rect.bottom:
                         self.v.y = 0
-                        pos.y = platform.rect.bottom + self.radius
+                        pos.y = platform.rect.bottom + self.height / 2
                     if self.rect.left >= platform.rect.right:
                         self.v.x = 0
-                        pos.x = platform.rect.right + self.radius
+                        pos.x = platform.rect.right + self.width / 2
                 elif on_top and on_right:
                     # Upper right on the player
                     if self.rect.top >= platform.rect.bottom:
                         self.v.y = 0
-                        pos.y = platform.rect.bottom + self.radius
+                        pos.y = platform.rect.bottom + self.height / 2
                     if self.rect.right <= platform.rect.left:
                         self.v.x = 0
-                        pos.x = platform.rect.left - self.radius
+                        pos.x = platform.rect.left - self.width / 2
                 elif on_bottom and on_left:
                     # Lower left on the player
                     if self.rect.bottom <= platform.rect.top:
                         self.v.y = 0
-                        pos.y = platform.rect.top - self.radius
+                        pos.y = platform.rect.top - self.height / 2
                     if self.rect.left >= platform.rect.right:
                         self.v.x = 0
-                        pos.x = platform.rect.right + self.radius
+                        pos.x = platform.rect.right + self.width / 2
                 elif on_bottom and on_right:
                     # Lower right on the player
                     if self.rect.bottom <= platform.rect.top:
                         self.v.y = 0
-                        pos.y = platform.rect.top - self.radius
+                        pos.y = platform.rect.top - self.height / 2
                     if self.rect.right <= platform.rect.left:
                         self.v.x = 0
-                        pos.x = platform.rect.left - self.radius
+                        pos.x = platform.rect.left - self.width / 2
 
         # Update the positions
         self.pos.x = pos.x
         self.pos.y = pos.y
-        self.rect.left = self.pos.x - self.radius
-        self.rect.top = self.pos.y - self.radius
+        self.rect.left = self.pos.x - self.width / 2
+        self.rect.top = self.pos.y - self.height / 2
 
     def draw(self, screen):
         """Draw on the screen.
@@ -163,7 +168,7 @@ class Player:
             screen (pygame.Surface): Drawing screen.
         """
         # Body
-        pygame.draw.circle(screen, self.color, self.pos, self.radius)
+        pygame.draw.rect(screen, self.color, self.rect)
 
         # Eyes
         eye_pos = [(-5, 0), (5, 0)]
