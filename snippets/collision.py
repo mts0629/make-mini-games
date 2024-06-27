@@ -53,10 +53,10 @@ class Player:
         # +------+     |
         #      |  obj  |
         #      +-------+
-        on_top = obj.top < rect.top < obj.bottom
-        on_bottom = obj.top < rect.bottom < obj.bottom
-        on_left = obj.left < rect.left < obj.right
-        on_right = obj.left < rect.right < obj.right
+        on_top = obj.top < rect.top <= obj.bottom
+        on_bottom = obj.top <= rect.bottom < obj.bottom
+        on_left = obj.left < rect.left <= obj.right
+        on_right = obj.left <= rect.right < obj.right
 
         return (on_top, on_bottom, on_left, on_right)
 
@@ -106,54 +106,63 @@ class Player:
                 in_obj_width = on_left and on_right
                 in_obj_height = on_top and on_bottom
 
+                # Limit the position and the velocity
                 if on_top and in_obj_width:
-                    # Top on the player
+                    # Stop on the object's bottom
                     self.v.y = 0
                     pos.y = platform.rect.bottom + self.height / 2
                 elif on_bottom and in_obj_width:
-                    # Bottom on the player
+                    # Stop on the object's top
                     self.v.y = 0
                     pos.y = platform.rect.top - self.height / 2
                 elif on_left and in_obj_height:
-                    # Left on the player
+                    # Stop on the object's right
                     self.v.x = 0
                     pos.x = platform.rect.right + self.width / 2
                 elif on_right and in_obj_height:
-                    # Right on the player
+                    # Stop on the object's left
                     self.v.x = 0
                     pos.x = platform.rect.left - self.width / 2
                 elif on_top and on_left:
-                    # Upper left on the player
-                    if self.rect.top >= platform.rect.bottom:
-                        self.v.y = 0
-                        pos.y = platform.rect.bottom + self.height / 2
+                    # Stop on the object's lower right when:
+                    if self.rect.top >= platform.rect.bottom:  # Collide at this frame
+                        if self.rect.left != platform.rect.right:  # Not on the edge
+                            self.v.y = 0
+                            pos.y = platform.rect.bottom + self.height / 2
                     if self.rect.left >= platform.rect.right:
-                        self.v.x = 0
-                        pos.x = platform.rect.right + self.width / 2
+                        if self.rect.top != platform.rect.bottom:
+                            self.v.x = 0
+                            pos.x = platform.rect.right + self.width / 2
                 elif on_top and on_right:
-                    # Upper right on the player
+                    # Stop on the object's lower left
                     if self.rect.top >= platform.rect.bottom:
-                        self.v.y = 0
-                        pos.y = platform.rect.bottom + self.height / 2
+                        if self.rect.right != platform.rect.left:
+                            self.v.y = 0
+                            pos.y = platform.rect.bottom + self.height / 2
                     if self.rect.right <= platform.rect.left:
-                        self.v.x = 0
-                        pos.x = platform.rect.left - self.width / 2
+                        if self.rect.top != platform.rect.bottom:
+                            self.v.x = 0
+                            pos.x = platform.rect.left - self.width / 2
                 elif on_bottom and on_left:
-                    # Lower left on the player
+                    # Stop on the object's upper right
                     if self.rect.bottom <= platform.rect.top:
-                        self.v.y = 0
-                        pos.y = platform.rect.top - self.height / 2
+                        if self.rect.left != platform.rect.right:
+                            self.v.y = 0
+                            pos.y = platform.rect.top - self.height / 2
                     if self.rect.left >= platform.rect.right:
-                        self.v.x = 0
-                        pos.x = platform.rect.right + self.width / 2
+                        if self.rect.bottom != platform.rect.top:
+                            self.v.x = 0
+                            pos.x = platform.rect.right + self.width / 2
                 elif on_bottom and on_right:
-                    # Lower right on the player
+                    # Stop on the object's upper left
                     if self.rect.bottom <= platform.rect.top:
-                        self.v.y = 0
-                        pos.y = platform.rect.top - self.height / 2
+                        if self.rect.right != platform.rect.left:
+                            self.v.y = 0
+                            pos.y = platform.rect.top - self.height / 2
                     if self.rect.right <= platform.rect.left:
-                        self.v.x = 0
-                        pos.x = platform.rect.left - self.width / 2
+                        if self.rect.bottom != platform.rect.top:
+                            self.v.x = 0
+                            pos.x = platform.rect.left - self.width / 2
 
         # Update the positions
         self.pos.x = pos.x
