@@ -70,7 +70,6 @@ class Player:
         """
         self.v.update(0, 0)
 
-        # If not in jumping, move a player by the key inputs
         # Move to upper/lower
         if pygame.key.get_pressed()[pygame.K_w]:
             self.v.y = -1
