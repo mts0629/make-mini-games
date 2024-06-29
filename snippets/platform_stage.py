@@ -169,8 +169,8 @@ class Player:
                             if self.v.y > 0:
                                 pos.y = platform.rect.top - self.height / 2
                             self.v.y = 0
-                        if self.jumping:
-                            self.jumping = False
+                            if self.jumping:
+                                self.jumping = False
                     if self.rect.left >= platform.rect.right:
                         if self.rect.bottom != platform.rect.top:
                             if self.v.x < 0:
@@ -183,8 +183,8 @@ class Player:
                             if self.v.y > 0:
                                 pos.y = platform.rect.top - self.height / 2
                             self.v.y = 0
-                        if self.jumping:
-                            self.jumping = False
+                            if self.jumping:
+                                self.jumping = False
                     if self.rect.right <= platform.rect.left:
                         if self.rect.bottom != platform.rect.top:
                             if self.v.x > 0:
