@@ -2,6 +2,11 @@
 
 import pygame
 
+# Constants
+# Falling speed
+FALLING_SPEED = 20
+# Maximum speed
+MAX_SPEED = 650
 
 class Player:
     """Player object.
@@ -10,6 +15,7 @@ class Player:
         pos (pygame.Vector2): Position (x, y).
         v (pygame.Vector2): Velocity (x, y).
         speed (float): Moving speed.
+        jumping_speed (float): Jumping speed.
         jumping (bool): Flag, True if while the player is jumping.
         width (int): Width.
         height (int): Height.
@@ -26,6 +32,7 @@ class Player:
         self.pos = pos.copy()
         self.v = pygame.Vector2(0, 0)
         self.speed = 200
+        self.jumping_speed = 650
         self.jumping = True
         self.width = 40
         self.height = 40
@@ -72,18 +79,18 @@ class Player:
         """
         if self.jumping:
             # Free fall
-            self.v.y += 20
+            self.v.y += FALLING_SPEED
 
             # Limit fall speed
-            if self.v.y > 650:
-                self.v.y = 650
+            if self.v.y > MAX_SPEED:
+                self.v.y = MAX_SPEED 
         else:
             # If not in jumping, move a player by the key inputs
             self.v.update(0, 0)
 
             # Jump
             if pygame.key.get_pressed()[pygame.K_w]:
-                self.v.y = -650
+                self.v.y = -self.jumping_speed
             # Move to Left/right
             if pygame.key.get_pressed()[pygame.K_a]:
                 self.v.x = -self.speed
