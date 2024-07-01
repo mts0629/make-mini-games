@@ -65,7 +65,7 @@ class Player:
 
         Args:
             screen (pygame.Surface): Drawing screen.
-            platforms (List[Platform]): Platforms.
+            platforms (List[Block]): Platforms.
             dt (float): Elapsed time[sec] from the previous frame.
         """
         self.v.update(0, 0)
@@ -244,7 +244,7 @@ def main():
         Block(pygame.Vector2(S_WIDTH / 2, S_HEIGHT + 5), S_WIDTH, 10),  # Bottom wall
         Block(pygame.Vector2(-5, S_HEIGHT / 2), 10, S_HEIGHT),  # Left wall
         Block(pygame.Vector2(S_WIDTH + 5, S_HEIGHT / 2), 10, S_HEIGHT),  # Right wall
-        Block(pygame.Vector2(S_WIDTH / 2 - 200, S_HEIGHT - 300), 100, 50),
+        Block(pygame.Vector2(S_WIDTH / 2 - 200, S_HEIGHT - 300), 100, 50),  # Platforms
         Block(pygame.Vector2(S_WIDTH / 2, S_HEIGHT - 150), 150, 50),
         Block(pygame.Vector2(S_WIDTH / 2 + 200, S_HEIGHT - 300), 50, 200),
     ]

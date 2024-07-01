@@ -8,6 +8,7 @@ FALLING_SPEED = 20
 # Maximum speed
 MAX_SPEED = 650
 
+
 class Player:
     """Player object.
 
@@ -69,12 +70,12 @@ class Player:
 
         return (on_top, on_bottom, on_left, on_right)
 
-    def move(self, screen, platforms, dt):
+    def move(self, screen, objectives, dt):
         """Move on the screen.
 
         Args:
             screen (pygame.Surface): Drawing screen.
-            platforms (List[Platform]): Platforms.
+            objectives (List[Block]): Objectives.
             dt (float): Elapsed time[sec] from the previous frame.
         """
         if self.jumping:
@@ -83,7 +84,7 @@ class Player:
 
             # Limit fall speed
             if self.v.y > MAX_SPEED:
-                self.v.y = MAX_SPEED 
+                self.v.y = MAX_SPEED
         else:
             # If not in jumping, move a player by the key inputs
             self.v.update(0, 0)
@@ -109,9 +110,11 @@ class Player:
         self.jumping = True
 
         # Collision check
-        for platform in platforms:
+        for objective in objectives:
+            obj_rect = objective.rect
+
             on_player_top, on_player_bottom, on_player_left, on_player_right = (
-                self.check_collision(rect, platform.rect)
+                self.check_collision(rect, obj_rect)
             )
             if (on_player_top or on_player_bottom) and (
                 on_player_left or on_player_right
@@ -123,12 +126,12 @@ class Player:
                 if on_player_top and between_obj_width:
                     # Stop on the object's bottom
                     if self.v.y < 0:  # When the player collide from the lower side
-                        pos.y = platform.rect.bottom + self.height / 2
+                        pos.y = obj_rect.bottom + self.height / 2
                     self.v.y = 0
                 elif on_player_bottom and between_obj_width:
                     # Stop on the object's top
                     if self.v.y > 0:  # From the upper side
-                        pos.y = platform.rect.top - self.height / 2
+                        pos.y = obj_rect.top - self.height / 2
                     self.v.y = 0
                     # If jumping, set the flag to false
                     if self.jumping:
@@ -136,66 +139,65 @@ class Player:
                 elif on_player_left and between_obj_height:
                     # Stop on the object's right
                     if self.v.x < 0:  # From the left side
-                        pos.x = platform.rect.right + self.width / 2
+                        pos.x = obj_rect.right + self.width / 2
                     self.v.x = 0
                 elif on_player_right and between_obj_height:
                     # Stop on the object's left
                     if self.v.x > 0:  # From the right side
-                        pos.x = platform.rect.left - self.width / 2
+                        pos.x = obj_rect.left - self.width / 2
                     self.v.x = 0
                 elif on_player_top and on_player_left:
                     # Stop on the object's lower right when:
-                    if self.rect.top >= platform.rect.bottom:  # Collide at this frame
-                        if (
-                            self.rect.left != platform.rect.right
-                        ):  # And not on the object's edge
+                    if self.rect.top >= obj_rect.bottom:  # Collide at this frame
+                        # And when the player is not on the object's edge
+                        if self.rect.left != obj_rect.right:
                             if self.v.y < 0:  # And from the upper side
-                                pos.y = platform.rect.bottom + self.height / 2
+                                pos.y = obj_rect.bottom + self.height / 2
                             self.v.y = 0
-                    if self.rect.left >= platform.rect.right:
-                        if self.rect.top != platform.rect.bottom:
+                    if self.rect.left >= obj_rect.right:
+                        if self.rect.top != obj_rect.bottom:
                             if self.v.x < 0:
-                                pos.x = platform.rect.right + self.width / 2
+                                pos.x = obj_rect.right + self.width / 2
                             self.v.x = 0
                 elif on_player_top and on_player_right:
                     # Stop on the object's lower left
-                    if self.rect.top >= platform.rect.bottom:
-                        if self.rect.right != platform.rect.left:
+                    if self.rect.top >= obj_rect.bottom:
+                        if self.rect.right != obj_rect.left:
                             if self.v.y < 0:
-                                pos.y = platform.rect.bottom + self.height / 2
+                                pos.y = obj_rect.bottom + self.height / 2
                             self.v.y = 0
-                    if self.rect.right <= platform.rect.left:
-                        if self.rect.top != platform.rect.bottom:
+                    if self.rect.right <= obj_rect.left:
+                        if self.rect.top != obj_rect.bottom:
                             if self.v.x > 0:
-                                pos.x = platform.rect.left - self.width / 2
+                                pos.x = obj_rect.left - self.width / 2
                             self.v.x = 0
                 elif on_player_bottom and on_player_left:
                     # Stop on the object's upper right
-                    if self.rect.bottom <= platform.rect.top:
-                        if self.rect.left != platform.rect.right:
+                    if self.rect.bottom <= obj_rect.top:
+                        if self.rect.left != obj_rect.right:
                             if self.v.y > 0:
-                                pos.y = platform.rect.top - self.height / 2
+                                pos.y = obj_rect.top - self.height / 2
                             self.v.y = 0
                             if self.jumping:
                                 self.jumping = False
-                    if self.rect.left >= platform.rect.right:
-                        if self.rect.bottom != platform.rect.top:
+                    if self.rect.left >= obj_rect.right:
+                        if self.rect.bottom != obj_rect.top:
                             if self.v.x < 0:
-                                pos.x = platform.rect.right + self.width / 2
+                                pos.x = obj_rect.right + self.width / 2
                             self.v.x = 0
                 elif on_player_bottom and on_player_right:
                     # Stop on the object's upper left
-                    if self.rect.bottom <= platform.rect.top:
-                        if self.rect.right != platform.rect.left:
+                    if self.rect.bottom <= obj_rect.top:
+                        if self.rect.right != obj_rect.left:
                             if self.v.y > 0:
-                                pos.y = platform.rect.top - self.height / 2
+                                pos.y = obj_rect.top - self.height / 2
                             self.v.y = 0
                             if self.jumping:
                                 self.jumping = False
-                    if self.rect.right <= platform.rect.left:
-                        if self.rect.bottom != platform.rect.top:
+                    if self.rect.right <= obj_rect.left:
+                        if self.rect.bottom != obj_rect.top:
                             if self.v.x > 0:
-                                pos.x = platform.rect.left - self.width / 2
+                                pos.x = obj_rect.left - self.width / 2
                             self.v.x = 0
 
         # Update the positions
