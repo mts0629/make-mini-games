@@ -22,6 +22,7 @@ class Player:
         height (int): Height.
         rect (pygame.Rect): Collision area.
         color (str): Drawn color.
+        jump_key_pressing (bool): Flag, True while the jump key is pressing.
     """
 
     def __init__(self, pos):
@@ -44,6 +45,8 @@ class Player:
             self.height,
         )
         self.color = "green"
+
+        self.jump_key_pressing = False
 
     def check_collision(self, rect, obj):
         """Check whether the collision area collides with that of an objective.
@@ -91,7 +94,13 @@ class Player:
 
             # Jump
             if pygame.key.get_pressed()[pygame.K_w]:
-                self.v.y = -self.jumping_speed
+                if not self.jump_key_pressing:
+                    self.v.y = -self.jumping_speed
+                    self.jump_key_pressing = True
+            else:
+                if self.jump_key_pressing:
+                    self.jump_key_pressing = False
+
             # Move to Left/right
             if pygame.key.get_pressed()[pygame.K_a]:
                 self.v.x = -self.speed
