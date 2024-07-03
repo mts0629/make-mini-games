@@ -1,4 +1,4 @@
-"""Player and a stage with platforms."""
+"""Collision check between the player and platforms in a stage."""
 
 import pygame
 
