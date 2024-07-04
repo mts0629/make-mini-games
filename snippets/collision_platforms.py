@@ -125,6 +125,7 @@ class Player:
             on_player_top, on_player_bottom, on_player_left, on_player_right = (
                 self.check_collision(rect, obj_rect)
             )
+
             if (on_player_top or on_player_bottom) and (
                 on_player_left or on_player_right
             ):
@@ -208,6 +209,14 @@ class Player:
                             if self.v.x > 0:
                                 pos.x = obj_rect.left - self.width / 2
                             self.v.x = 0
+            if (on_player_left or on_player_right) and (rect.bottom >= obj_rect.bottom):
+                if self.rect.bottom < obj_rect.bottom:
+                    pos.y = obj_rect.top - self.height / 2
+                    self.v.y = 0
+            if (on_player_left or on_player_right) and (rect.top <= obj_rect.top):
+                if self.rect.top > obj_rect.top:
+                    pos.y = obj_rect.bottom + self.height / 2
+                    self.v.y = 0
 
         # Update the positions
         self.pos.x = pos.x
@@ -290,9 +299,9 @@ def main():
         Block(pygame.Vector2(S_WIDTH / 2, S_HEIGHT + 5), S_WIDTH, 10),  # Floor
         Block(pygame.Vector2(-5, S_HEIGHT / 2), 10, S_HEIGHT),  # Left wall
         Block(pygame.Vector2(S_WIDTH + 5, S_HEIGHT / 2), 10, S_HEIGHT),  # Right wall
-        Block(pygame.Vector2(S_WIDTH / 2 - 200, S_HEIGHT - 300), 150, 30),
-        Block(pygame.Vector2(S_WIDTH / 2, S_HEIGHT - 150), 200, 30),
-        Block(pygame.Vector2(S_WIDTH / 2 + 200, S_HEIGHT - 300), 150, 30),
+        Block(pygame.Vector2(S_WIDTH / 2 - 200, S_HEIGHT - 300), 150, 10),
+        Block(pygame.Vector2(S_WIDTH / 2, S_HEIGHT - 150), 200, 5),
+        Block(pygame.Vector2(S_WIDTH / 2 + 200, S_HEIGHT - 300), 150, 20),
     ]
 
     clock = pygame.time.Clock()
