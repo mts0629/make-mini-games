@@ -209,12 +209,13 @@ class Player:
                             if self.v.x > 0:
                                 pos.x = obj_rect.left - self.width / 2
                             self.v.x = 0
+            # Fix the position when the player slipped through the objective between 2 frames
             if (on_player_left or on_player_right) and (rect.bottom >= obj_rect.bottom):
-                if self.rect.bottom < obj_rect.bottom:
+                if self.rect.top < obj_rect.top:
                     pos.y = obj_rect.top - self.height / 2
                     self.v.y = 0
             if (on_player_left or on_player_right) and (rect.top <= obj_rect.top):
-                if self.rect.top > obj_rect.top:
+                if self.rect.bottom > obj_rect.bottom:
                     pos.y = obj_rect.bottom + self.height / 2
                     self.v.y = 0
 
