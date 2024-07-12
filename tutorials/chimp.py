@@ -48,3 +48,82 @@ def load_sound(name):
     sound = pg.mixer.Sound(fullname)
 
     return sound
+
+
+class Fist(pg.sprite.Sprite):
+    """Moves a clenched fist on the screen, following the mouse."""
+
+    def __init__(self):
+        pg.sprite.Sprite.__init__(self)  # Initialize a Sprite
+        self.image, self.rect = load_image("fist.png", -1)
+        self.fist_offset = (-235, -80)
+        self.punching = False
+
+    def update(self):  # Called once per frame for all Sprites
+        """Move the fist based on the mouse position."""
+        pos = pg.mouse.get_pos()
+        self.rect.topleft = pos
+        self.rect.move_ip(self.fist_offset)
+        if self.punching:
+            self.rect.move_ip(15, 25)
+
+    def punch(self, target):
+        """Returns True if the fist collides with the target."""
+        if not self.punching:
+            self.punching = True
+            hitbox = self.rect.inflate(-5, -5)
+            return hitbox.collidedetect(target.rect)
+
+    def unpunch(self):
+        """Pull the fist back."""
+        self.punching = False
+
+
+class Chimp(pg.sprite.Sprite):
+    """Moves a monkey critter across the screen.
+    It can spin the monkey when it is punched.
+    """
+
+    def __init__(self):
+        pg.sprite.Sprite.__init__(self)
+        self.image, self.rect = load_image("chimp.png", -1, 4)
+        screen = pg.display.get_surface()
+        self.area = screen.get_rect()
+        self.rect.topleft = 10, 90
+        self.move = 18
+        self.dizzy = False
+
+    def update(self):
+        """Walk or spin, depending on the monkey's state."""
+        if self.dizzy:
+            self._spin()
+        else:
+            self._walk()
+
+    def _walk(self):
+        """Move the monkey across the screen, and turn at the ends."""
+        newpos = self.rect.move((self.move, 0))
+        if not self.area.contains(newpos):
+            if self.rect.left < self.area.left or self.rect.right > self.area.right:
+                self.move = -self.move
+                newpos = self.rect.move((self.move, 0))
+                self.image = pg.transform.flip(self.image, True, False)
+        self.rect = newpos
+
+    def _spin(self):
+        """Spin the monkey image."""
+        center = self.rect.center
+        self.dizzy = self.dizzy + 12
+        if self.dizzy >= 360:
+            self.dizzy = False
+            self.image = self.original
+        else:
+            rotate = pg.transform.rotate
+            self.image = rotate(self.original, self.dizzy)
+        self.rect = self.image.get_rect(center=center)
+
+    def punched(self):
+        """Start spinning the monkey."""
+        if not self.dizzy:
+            self.dizzy = True
+            self.original = self.image
