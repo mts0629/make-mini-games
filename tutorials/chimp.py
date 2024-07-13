@@ -9,6 +9,7 @@ if not pg.mixer:
 
 main_dir = os.path.split(os.path.abspath(__file__))[0]
 # Subdirectory for game data
+# Data are in the example directory of pygame
 data_dir = os.path.join(main_dir, "data")
 
 
@@ -72,7 +73,7 @@ class Fist(pg.sprite.Sprite):
         if not self.punching:
             self.punching = True
             hitbox = self.rect.inflate(-5, -5)
-            return hitbox.collidedetect(target.rect)
+            return hitbox.colliderect(target.rect)
 
     def unpunch(self):
         """Pull the fist back."""
@@ -127,3 +128,70 @@ class Chimp(pg.sprite.Sprite):
         if not self.dizzy:
             self.dizzy = True
             self.original = self.image
+
+
+def main():
+    """Main routine."""
+    # Initialization
+    pg.init()
+    screen = pg.display.set_mode((1280, 480), pg.SCALED)
+    pg.display.set_caption("Monkey Fever")
+    pg.mouse.set_visible(False)
+
+    # Create the background
+    background = pg.Surface(screen.get_size())
+    background = background.convert()
+    background.fill((170, 238, 187))
+
+    # Put text on the background, centered
+    if pg.font:
+        font = pg.font.Font(None, 64)
+        text = font.render("Pummenl The Chimp, And Win $$$", True, (10, 10, 10))
+        textpos = text.get_rect(centerx=background.get_width() / 2, y=10)
+        background.blit(text, textpos)
+
+    # Display the background
+    screen.blit(background, (0, 0))
+    pg.display.flip()
+
+    # Prepare game objects
+    whiff_sound = load_sound("whiff.wav")
+    punch_sound = load_sound("punch.wav")
+    chimp = Chimp()
+    fist = Fist()
+    allsprites = pg.sprite.RenderPlain((chimp, fist))
+    clock = pg.time.Clock()
+
+    # Main loop
+    going = True
+    while going:
+        clock.tick(60)
+
+        # Handle input events
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                going = False
+            elif event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
+                going = False
+            elif event.type == pg.MOUSEBUTTONDOWN:
+                if fist.punch(chimp):
+                    punch_sound.play()  # Punch
+                    chimp.punched()
+                else:
+                    whiff_sound.play()  # Miss
+            elif event.type == pg.MOUSEBUTTONUP:
+                fist.unpunch()
+
+        allsprites.update()
+
+        # Draw everything
+        screen.blit(background, (0, 0))
+        allsprites.draw(screen)
+        pg.display.flip()
+
+    # Game over
+    pg.quit()
+
+
+if __name__ == "__main__":
+    main()
