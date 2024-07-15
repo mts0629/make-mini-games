@@ -17,7 +17,7 @@ class Player:
         v (pygame.Vector2): Velocity (x, y).
         speed (float): Moving speed.
         jumping_speed (float): Jumping speed.
-        jumping (bool): Flag, True if while the player is jumping.
+        on_ground (bool): Flag, True if while the player is on the top of an object.
         width (int): Width.
         height (int): Height.
         rect (pygame.Rect): Collision area.
@@ -35,7 +35,7 @@ class Player:
         self.v = pygame.Vector2(0, 0)
         self.speed = 200
         self.jumping_speed = 650
-        self.jumping = True
+        self.on_ground = False
         self.width = 40
         self.height = 40
         self.rect = pygame.Rect(
@@ -81,13 +81,7 @@ class Player:
             objectives (List[Block]): Objectives.
             dt (float): Elapsed time[sec] from the previous frame.
         """
-        if self.jumping:
-            # Free fall
-            self.v.y += FALLING_SPEED
-            # Limit fall speed
-            if self.v.y > MAX_SPEED:
-                self.v.y = MAX_SPEED
-        else:
+        if self.on_ground:
             # If not in jumping, move a player by the key inputs
             self.v.update(0, 0)
 
@@ -96,6 +90,8 @@ class Player:
                 # Only when the jump key doesn't be holding
                 if not self.jump_key_is_holding:
                     self.v.y = -self.jumping_speed
+                    self.on_ground = False
+
                     self.jump_key_is_holding = True
             else:
                 if self.jump_key_is_holding:
@@ -106,6 +102,15 @@ class Player:
                 self.v.x = -self.speed
             elif pygame.key.get_pressed()[pygame.K_d]:
                 self.v.x = self.speed
+        else:
+            # Free fall
+            self.v.y += FALLING_SPEED
+            # Limit fall speed
+            if self.v.y > MAX_SPEED:
+                self.v.y = MAX_SPEED
+
+        # Previous collision area
+        prev_rect = self.rect
 
         # Calculate a temporal position and a collision area
         pos = self.pos + self.v * dt
@@ -116,7 +121,7 @@ class Player:
             self.rect.height,
         )
 
-        self.jumping = True
+        self.on_ground = False
 
         # Collision check
         for objective in objectives:
@@ -129,95 +134,114 @@ class Player:
             if (on_player_top or on_player_bottom) and (
                 on_player_left or on_player_right
             ):
-                between_obj_width = on_player_left and on_player_right
-                between_obj_height = on_player_top and on_player_bottom
-
                 # Limit player's position and velocity
-                if on_player_top and between_obj_width:
-                    # Stop on the object's bottom
-                    if self.v.y < 0:  # When the player collide from the lower side
-                        pos.y = obj_rect.bottom + self.height / 2
-                    self.v.y = 0
-                elif on_player_bottom and between_obj_width:
-                    # Stop on the object's top
-                    if self.v.y > 0:  # From the upper side
+                if (
+                    (not on_player_top)
+                    and on_player_bottom
+                    and on_player_left
+                    and on_player_right
+                ):
+                    # From the upper side, stop on the object's top
+                    if self.v.y > 0:
+                        self.v.y = 0
                         pos.y = obj_rect.top - self.height / 2
-                    self.v.y = 0
-                    # If jumping, set the flag to false
-                    if self.jumping:
-                        self.jumping = False
-                elif on_player_left and between_obj_height:
-                    # Stop on the object's right
-                    if self.v.x < 0:  # From the left side
+                        self.on_ground = True
+                elif (
+                    on_player_top
+                    and (not on_player_bottom)
+                    and on_player_left
+                    and on_player_right
+                ):
+                    # From the lower side, stop on the object's bottom
+                    if self.v.y < 0:
+                        self.v.y = 0
+                        pos.y = obj_rect.bottom + self.height / 2
+                elif (
+                    on_player_top
+                    and on_player_bottom
+                    and on_player_left
+                    and (not on_player_right)
+                ):
+                    # From the right side, stop on the object's right
+                    if self.v.x < 0:
+                        self.v.x = 0
                         pos.x = obj_rect.right + self.width / 2
-                    self.v.x = 0
-                elif on_player_right and between_obj_height:
-                    # Stop on the object's left
-                    if self.v.x > 0:  # From the right side
+                elif (
+                    on_player_top
+                    and on_player_bottom
+                    and (not on_player_left)
+                    and on_player_right
+                ):
+                    # From the left side, stop on the object's left
+                    if self.v.x > 0:
+                        self.v.x = 0
                         pos.x = obj_rect.left - self.width / 2
-                    self.v.x = 0
-                elif on_player_top and on_player_left:
-                    # Stop on the object's lower right when:
-                    if self.rect.top >= obj_rect.bottom:  # Collide at this frame
-                        # And when the player is not on the object's edge
-                        if self.rect.left != obj_rect.right:
-                            if self.v.y < 0:  # And from the upper side
-                                pos.y = obj_rect.bottom + self.height / 2
-                            self.v.y = 0
-                    if self.rect.left >= obj_rect.right:
-                        if self.rect.top != obj_rect.bottom:
-                            if self.v.x < 0:
-                                pos.x = obj_rect.right + self.width / 2
-                            self.v.x = 0
-                elif on_player_top and on_player_right:
-                    # Stop on the object's lower left
-                    if self.rect.top >= obj_rect.bottom:
-                        if self.rect.right != obj_rect.left:
-                            if self.v.y < 0:
-                                pos.y = obj_rect.bottom + self.height / 2
-                            self.v.y = 0
-                    if self.rect.right <= obj_rect.left:
-                        if self.rect.top != obj_rect.bottom:
-                            if self.v.x > 0:
-                                pos.x = obj_rect.left - self.width / 2
-                            self.v.x = 0
-                elif on_player_bottom and on_player_left:
-                    # Stop on the object's upper right
-                    if self.rect.bottom <= obj_rect.top:
-                        if self.rect.left != obj_rect.right:
-                            if self.v.y > 0:
-                                pos.y = obj_rect.top - self.height / 2
-                            self.v.y = 0
-                            if self.jumping:
-                                self.jumping = False
-                    if self.rect.left >= obj_rect.right:
-                        if self.rect.bottom != obj_rect.top:
-                            if self.v.x < 0:
-                                pos.x = obj_rect.right + self.width / 2
-                            self.v.x = 0
-                elif on_player_bottom and on_player_right:
-                    # Stop on the object's upper left
-                    if self.rect.bottom <= obj_rect.top:
-                        if self.rect.right != obj_rect.left:
-                            if self.v.y > 0:
-                                pos.y = obj_rect.top - self.height / 2
-                            self.v.y = 0
-                            if self.jumping:
-                                self.jumping = False
-                    if self.rect.right <= obj_rect.left:
-                        if self.rect.bottom != obj_rect.top:
-                            if self.v.x > 0:
-                                pos.x = obj_rect.left - self.width / 2
-                            self.v.x = 0
-            # Fix the position when the player slipped through the objective between 2 frames
-            if (on_player_left or on_player_right) and (rect.bottom >= obj_rect.bottom):
-                if self.rect.top < obj_rect.top:
-                    pos.y = obj_rect.top - self.height / 2
-                    self.v.y = 0
-            if (on_player_left or on_player_right) and (rect.top <= obj_rect.top):
-                if self.rect.bottom > obj_rect.bottom:
-                    pos.y = obj_rect.bottom + self.height / 2
-                    self.v.y = 0
+                elif (
+                    (not on_player_top)
+                    and on_player_bottom
+                    and on_player_left
+                    and (not on_player_right)
+                ):
+                    # From the upper-left side
+                    if self.v.y > 0:
+                        self.v.y = 0
+                        pos.y = obj_rect.top - self.height / 2
+                    self.on_ground = True
+                    if self.v.x < 0:
+                        self.v.x = 0
+                        pos.x = obj_rect.right + self.width / 2
+                elif (
+                    (not on_player_top)
+                    and on_player_bottom
+                    and (not on_player_left)
+                    and on_player_right
+                ):
+                    # From the upper-right side
+                    if self.v.y > 0:
+                        self.v.y = 0
+                        pos.y = obj_rect.top - self.height / 2
+                    self.on_ground = True
+                    if self.v.x > 0:
+                        self.v.x = 0
+                        pos.x = obj_rect.left - self.width / 2
+                elif (
+                    on_player_top
+                    and (not on_player_bottom)
+                    and on_player_left
+                    and (not on_player_right)
+                ):
+                    # From the lower-left side
+                    if self.v.y < 0:
+                        self.v.y = 0
+                        pos.y = obj_rect.bottom + self.height / 2
+                    if self.v.x < 0:
+                        self.v.x = 0
+                        pos.x = obj_rect.right + self.width / 2
+                elif (
+                    on_player_top
+                    and (not on_player_bottom)
+                    and (not on_player_left)
+                    and on_player_right
+                ):
+                    # From the lower-right side
+                    if self.v.y < 0:
+                        self.v.y = 0
+                        pos.y = obj_rect.bottom + self.height / 2
+                    if self.v.x > 0:
+                        self.v.x = 0
+                        pos.x = obj_rect.left - self.width / 2
+
+            # Stop when the player slipped through an object between 2 frames
+            if on_player_left or on_player_right:
+                if (prev_rect.bottom <= obj_rect.top) and (rect.bottom > obj_rect.top):
+                    if self.v.y > 0:
+                        self.v.y = 0
+                        pos.y = obj_rect.top - self.height / 2
+                    self.on_ground = True
+                if (prev_rect.top >= obj_rect.bottom) and (rect.top < obj_rect.bottom):
+                    if self.v.y < 0:
+                        self.v.y = 0
+                        pos.y = obj_rect.bottom + self.height / 2
 
         # Update the positions
         self.pos.x = pos.x
@@ -300,6 +324,7 @@ def main():
         Block(pygame.Vector2(S_WIDTH / 2, S_HEIGHT + 5), S_WIDTH, 10),  # Floor
         Block(pygame.Vector2(-5, S_HEIGHT / 2), 10, S_HEIGHT),  # Left wall
         Block(pygame.Vector2(S_WIDTH + 5, S_HEIGHT / 2), 10, S_HEIGHT),  # Right wall
+        # Platforms in different sizes
         Block(pygame.Vector2(S_WIDTH / 2 - 200, S_HEIGHT - 300), 150, 10),
         Block(pygame.Vector2(S_WIDTH / 2, S_HEIGHT - 150), 200, 5),
         Block(pygame.Vector2(S_WIDTH / 2 + 200, S_HEIGHT - 300), 150, 20),
@@ -333,7 +358,7 @@ def main():
         debug_text = font.render(
             f"(x,y)=({player.pos.x:.0f},{player.pos.y:.0f}),"
             f"(vx,vx)=({player.v.x:.0f},{player.v.y:.0f}),"
-            f"jumping={player.jumping}",
+            f"on_ground={player.on_ground}",
             True,
             (255, 255, 255),
         )
