@@ -2,6 +2,9 @@
 
 Making mini games with Python
 
+- `snippets/`: code snippets for game mechanics.
+- `tutorials/`: tutorials from pygame.
+
 ## Environment
 
 - Python 3.10.12
