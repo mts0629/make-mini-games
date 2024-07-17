@@ -1,5 +1,7 @@
 """Collision check between the player and platforms in a stage."""
 
+from enum import Flag, auto
+
 import pygame
 
 # Constants
@@ -7,6 +9,66 @@ import pygame
 FALLING_SPEED = 20
 # Maximum speed
 MAX_SPEED = 650
+
+
+class CollisionFlag(Flag):
+    """Collision flag of 2 rectangles for each direction."""
+
+    NONE = 0  # No collision
+    ON_BOTTOM = auto()
+    ON_TOP = auto()
+    ON_LEFT = auto()
+    ON_RIGHT = auto()
+    ON_BOTTOM_LEFT = ON_BOTTOM | ON_LEFT
+    ON_BOTTOM_RIGHT = ON_BOTTOM | ON_RIGHT
+    ON_TOP_LEFT = ON_TOP | ON_LEFT
+    ON_TOP_RIGHT = ON_TOP | ON_RIGHT
+
+
+def check_collision(target_rect, obj_rect):
+    """Check whether the collision area of a target collides to that of an objective.
+
+    Args:
+        target_rect (pygame.Rect): Collision area of the target.
+        obj_rect (pygame.Rect): Collision of the objective.
+
+    Returns:
+        (CollisionFlag): Collision flag for each direction between the rectangles.
+    """
+    # Collision check by rectangles
+    #
+    #           Left     Right
+    #           :        :
+    # Top ..... +--------+
+    #           | target |
+    #           |     +--|-----+
+    # Bottom .. +--------+     |
+    #                 |  obj   |
+    #                 +--------+
+    #
+    on_top = obj_rect.top < target_rect.top <= obj_rect.bottom
+    on_bottom = obj_rect.top <= target_rect.bottom < obj_rect.bottom
+    on_left = obj_rect.left < target_rect.left <= obj_rect.right
+    on_right = obj_rect.left <= target_rect.right < obj_rect.right
+
+    if (not on_top) and on_bottom and on_left and on_right:
+        return CollisionFlag.ON_BOTTOM
+    elif on_top and (not on_bottom) and on_left and on_right:
+        return CollisionFlag.ON_TOP
+    elif on_top and on_bottom and on_left and (not on_right):
+        return CollisionFlag.ON_LEFT
+    elif on_top and on_bottom and (not on_left) and on_right:
+        return CollisionFlag.ON_RIGHT
+    elif (not on_top) and on_bottom and on_left and (not on_right):
+        return CollisionFlag.ON_BOTTOM_LEFT
+    elif (not on_top) and on_bottom and (not on_left) and on_right:
+        return CollisionFlag.ON_BOTTOM_RIGHT
+    elif on_top and (not on_bottom) and on_left and (not on_right):
+        return CollisionFlag.ON_TOP_LEFT
+    elif on_top and on_bottom and (not on_left) and on_right:
+        return CollisionFlag.ON_TOP_RIGHT
+
+    return CollisionFlag.NONE
 
 
 class Player:
@@ -47,31 +109,6 @@ class Player:
         self.color = "green"
 
         self.jump_key_is_holding = False
-
-    def check_collision(self, rect, obj):
-        """Check whether the collision area collides with that of an objective.
-
-        Args:
-            rect (pygame.Rect): Collision area of the character.
-            obj (pygame.Rect): Collision of the objective.
-
-        Returns:
-            (Tuple[bool, bool, bool, bool]): Collision flags for each direction,
-                on the top/bottom/left/right of the character.
-        """
-        # Collision check by rectangles
-        # +------+
-        # | rect |
-        # |    +-|-----+
-        # +------+     |
-        #      |  obj  |
-        #      +-------+
-        on_top = obj.top < rect.top <= obj.bottom
-        on_bottom = obj.top <= rect.bottom < obj.bottom
-        on_left = obj.left < rect.left <= obj.right
-        on_right = obj.left <= rect.right < obj.right
-
-        return (on_top, on_bottom, on_left, on_right)
 
     def move(self, screen, objectives, dt):
         """Move on the screen.
@@ -127,61 +164,31 @@ class Player:
         for objective in objectives:
             obj_rect = objective.rect
 
-            on_player_top, on_player_bottom, on_player_left, on_player_right = (
-                self.check_collision(rect, obj_rect)
-            )
-
-            if (on_player_top or on_player_bottom) and (
-                on_player_left or on_player_right
-            ):
+            flag = check_collision(rect, obj_rect)
+            if flag != CollisionFlag.NONE:
                 # Limit player's position and velocity
-                if (
-                    (not on_player_top)
-                    and on_player_bottom
-                    and on_player_left
-                    and on_player_right
-                ):
+                if flag == CollisionFlag.ON_BOTTOM:
                     # From the upper side, stop on the object's top
                     if self.v.y > 0:
                         self.v.y = 0
                         pos.y = obj_rect.top - self.height / 2
                         self.on_ground = True
-                elif (
-                    on_player_top
-                    and (not on_player_bottom)
-                    and on_player_left
-                    and on_player_right
-                ):
+                elif flag == CollisionFlag.ON_TOP:
                     # From the lower side, stop on the object's bottom
                     if self.v.y < 0:
                         self.v.y = 0
                         pos.y = obj_rect.bottom + self.height / 2
-                elif (
-                    on_player_top
-                    and on_player_bottom
-                    and on_player_left
-                    and (not on_player_right)
-                ):
+                elif flag == CollisionFlag.ON_LEFT:
                     # From the right side, stop on the object's right
                     if self.v.x < 0:
                         self.v.x = 0
                         pos.x = obj_rect.right + self.width / 2
-                elif (
-                    on_player_top
-                    and on_player_bottom
-                    and (not on_player_left)
-                    and on_player_right
-                ):
+                elif flag == CollisionFlag.ON_RIGHT:
                     # From the left side, stop on the object's left
                     if self.v.x > 0:
                         self.v.x = 0
                         pos.x = obj_rect.left - self.width / 2
-                elif (
-                    (not on_player_top)
-                    and on_player_bottom
-                    and on_player_left
-                    and (not on_player_right)
-                ):
+                elif flag == CollisionFlag.ON_BOTTOM_LEFT:
                     # From the upper-left side
                     if self.v.y > 0:
                         self.v.y = 0
@@ -190,12 +197,7 @@ class Player:
                     if self.v.x < 0:
                         self.v.x = 0
                         pos.x = obj_rect.right + self.width / 2
-                elif (
-                    (not on_player_top)
-                    and on_player_bottom
-                    and (not on_player_left)
-                    and on_player_right
-                ):
+                elif flag == CollisionFlag.ON_BOTTOM_RIGHT:
                     # From the upper-right side
                     if self.v.y > 0:
                         self.v.y = 0
@@ -204,12 +206,7 @@ class Player:
                     if self.v.x > 0:
                         self.v.x = 0
                         pos.x = obj_rect.left - self.width / 2
-                elif (
-                    on_player_top
-                    and (not on_player_bottom)
-                    and on_player_left
-                    and (not on_player_right)
-                ):
+                elif flag == CollisionFlag.ON_TOP_LEFT:
                     # From the lower-left side
                     if self.v.y < 0:
                         self.v.y = 0
@@ -217,12 +214,7 @@ class Player:
                     if self.v.x < 0:
                         self.v.x = 0
                         pos.x = obj_rect.right + self.width / 2
-                elif (
-                    on_player_top
-                    and (not on_player_bottom)
-                    and (not on_player_left)
-                    and on_player_right
-                ):
+                elif flag == CollisionFlag.ON_TOP_RIGHT:
                     # From the lower-right side
                     if self.v.y < 0:
                         self.v.y = 0
@@ -232,7 +224,7 @@ class Player:
                         pos.x = obj_rect.left - self.width / 2
 
             # Stop when the player slipped through an object between 2 frames
-            if on_player_left or on_player_right:
+            if (flag & CollisionFlag.ON_LEFT) or (flag & CollisionFlag.ON_RIGHT):
                 if (prev_rect.bottom <= obj_rect.top) and (rect.bottom > obj_rect.top):
                     if self.v.y > 0:
                         self.v.y = 0
