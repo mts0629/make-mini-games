@@ -172,6 +172,7 @@ class Player:
                     if self.v.y > 0:
                         self.v.y = 0
                         pos.y = obj_rect.top - self.height / 2
+                    if prev_rect.bottom <= obj_rect.top:
                         self.on_ground = True
                 elif flag == CollisionFlag.ON_TOP:
                     # From the lower side, stop on the object's bottom
@@ -193,8 +194,9 @@ class Player:
                     if self.v.y > 0:
                         self.v.y = 0
                         pos.y = obj_rect.top - self.height / 2
-                    self.on_ground = True
-                    if self.v.x < 0:
+                    if prev_rect.bottom <= obj_rect.top:
+                        self.on_ground = True
+                    if (self.v.x < 0) and (rect.left >= obj_rect.right):
                         self.v.x = 0
                         pos.x = obj_rect.right + self.width / 2
                 elif flag == CollisionFlag.ON_BOTTOM_RIGHT:
@@ -202,8 +204,9 @@ class Player:
                     if self.v.y > 0:
                         self.v.y = 0
                         pos.y = obj_rect.top - self.height / 2
-                    self.on_ground = True
-                    if self.v.x > 0:
+                    if prev_rect.bottom <= obj_rect.top:
+                        self.on_ground = True
+                    if (self.v.x > 0) and (rect.right <= obj_rect.left):
                         self.v.x = 0
                         pos.x = obj_rect.left - self.width / 2
                 elif flag == CollisionFlag.ON_TOP_LEFT:
@@ -211,7 +214,7 @@ class Player:
                     if self.v.y < 0:
                         self.v.y = 0
                         pos.y = obj_rect.bottom + self.height / 2
-                    if self.v.x < 0:
+                    if (self.v.x < 0) and (rect.left >= obj_rect.right):
                         self.v.x = 0
                         pos.x = obj_rect.right + self.width / 2
                 elif flag == CollisionFlag.ON_TOP_RIGHT:
@@ -219,21 +222,26 @@ class Player:
                     if self.v.y < 0:
                         self.v.y = 0
                         pos.y = obj_rect.bottom + self.height / 2
-                    if self.v.x > 0:
+                    if (self.v.x > 0) and (rect.right <= obj_rect.left):
                         self.v.x = 0
                         pos.x = obj_rect.left - self.width / 2
 
-            # Stop when the player slipped through an object between 2 frames
-            if (flag & CollisionFlag.ON_LEFT) or (flag & CollisionFlag.ON_RIGHT):
-                if (prev_rect.bottom <= obj_rect.top) and (rect.bottom > obj_rect.top):
-                    if self.v.y > 0:
-                        self.v.y = 0
-                        pos.y = obj_rect.top - self.height / 2
-                    self.on_ground = True
-                if (prev_rect.top >= obj_rect.bottom) and (rect.top < obj_rect.bottom):
-                    if self.v.y < 0:
-                        self.v.y = 0
-                        pos.y = obj_rect.bottom + self.height / 2
+                # Stop when the player slipped through an object between 2 frames
+                if (flag & CollisionFlag.ON_LEFT) or (flag & CollisionFlag.ON_RIGHT):
+                    if (prev_rect.bottom <= obj_rect.top) and (
+                        rect.bottom > obj_rect.top
+                    ):
+                        if self.v.y > 0:
+                            self.v.y = 0
+                            pos.y = obj_rect.top - self.height / 2
+                        if prev_rect.bottom <= obj_rect.top:
+                            self.on_ground = True
+                    if (prev_rect.top >= obj_rect.bottom) and (
+                        rect.top < obj_rect.bottom
+                    ):
+                        if self.v.y < 0:
+                            self.v.y = 0
+                            pos.y = obj_rect.bottom + self.height / 2
 
         # Update the positions
         self.pos.x = pos.x
