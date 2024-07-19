@@ -191,7 +191,7 @@ class Player:
                         pos.x = obj_rect.left - self.width / 2
                 elif flag == CollisionFlag.ON_BOTTOM_LEFT:
                     # From the upper-left side
-                    if self.v.y > 0:
+                    if (self.v.y > 0) and (rect.bottom >= obj_rect.top):
                         self.v.y = 0
                         pos.y = obj_rect.top - self.height / 2
                     if prev_rect.bottom <= obj_rect.top:
@@ -201,7 +201,8 @@ class Player:
                         pos.x = obj_rect.right + self.width / 2
                 elif flag == CollisionFlag.ON_BOTTOM_RIGHT:
                     # From the upper-right side
-                    if self.v.y > 0:
+                    # if self.v.y > 0:
+                    if (self.v.y > 0) and (rect.bottom >= obj_rect.top):
                         self.v.y = 0
                         pos.y = obj_rect.top - self.height / 2
                     if prev_rect.bottom <= obj_rect.top:
@@ -211,7 +212,7 @@ class Player:
                         pos.x = obj_rect.left - self.width / 2
                 elif flag == CollisionFlag.ON_TOP_LEFT:
                     # From the lower-left side
-                    if self.v.y < 0:
+                    if (self.v.y < 0) and (rect.top <= obj_rect.bottom):
                         self.v.y = 0
                         pos.y = obj_rect.bottom + self.height / 2
                     if (self.v.x < 0) and (rect.left >= obj_rect.right):
@@ -219,7 +220,8 @@ class Player:
                         pos.x = obj_rect.right + self.width / 2
                 elif flag == CollisionFlag.ON_TOP_RIGHT:
                     # From the lower-right side
-                    if self.v.y < 0:
+                    # if self.v.y < 0:
+                    if (self.v.y < 0) and (rect.top <= obj_rect.bottom):
                         self.v.y = 0
                         pos.y = obj_rect.bottom + self.height / 2
                     if (self.v.x > 0) and (rect.right <= obj_rect.left):
