@@ -351,9 +351,11 @@ def main():
         Block(pygame.Vector2(-5, S_HEIGHT / 2), 10, S_HEIGHT),  # Left wall
         Block(pygame.Vector2(S_WIDTH + 5, S_HEIGHT / 2), 10, S_HEIGHT),  # Right wall
         # Platforms in different sizes
-        Block(pygame.Vector2(S_WIDTH / 2 - 200, S_HEIGHT - 300), 150, 10),
-        Block(pygame.Vector2(S_WIDTH / 2, S_HEIGHT - 150), 200, 5),
-        Block(pygame.Vector2(S_WIDTH / 2 + 200, S_HEIGHT - 300), 150, 20),
+        Block(pygame.Vector2(S_WIDTH / 2 - 200, S_HEIGHT - 300), 80, 10),
+        Block(pygame.Vector2(S_WIDTH / 2, S_HEIGHT - 150), 100, 5),
+        Block(pygame.Vector2(S_WIDTH / 2 + 200, S_HEIGHT - 300), 160, 20),
+        Block(pygame.Vector2(S_WIDTH / 2 + 200, S_HEIGHT - 50), 80, 100),
+        Block(pygame.Vector2(75, S_HEIGHT - 120), 150, 40),
     ]
 
     clock = pygame.time.Clock()
