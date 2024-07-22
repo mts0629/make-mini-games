@@ -333,6 +333,11 @@ def main():
 
     screen = pygame.display.set_mode((640, 480))
 
+    # Background
+    background = pygame.Surface(screen.get_size())
+    background = background.convert()
+    background.fill("Black")
+
     # Help text
     font = pygame.font.Font(pygame.font.get_default_font(), 20)
     help_text = font.render(
@@ -371,9 +376,9 @@ def main():
         if pygame.key.get_pressed()[pygame.K_ESCAPE]:
             running = False
 
-        screen.fill("black")
-
         player.move(screen, platforms, dt)
+
+        screen.blit(background, (0, 0))
 
         for platform in platforms:
             platform.draw(screen)
