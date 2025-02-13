@@ -1,5 +1,7 @@
 """Simple paint."""
 
+from typing import Tuple
+
 import pygame
 
 
@@ -23,6 +25,10 @@ def main():
     canvas = canvas.convert()
     canvas.fill("White")
 
+    def _fix_draw_pos(x: int, y: int) -> Tuple[int, int]:
+        """Fix draw position based of canvas position."""
+        return (x - CANVAS_BEGIN[0], y - CANVAS_BEGIN[1])
+
     FONT_SIZE = 20
     font = pygame.font.Font(pygame.font.get_default_font(), FONT_SIZE)
 
@@ -34,6 +40,9 @@ def main():
     current_pen_color = pen_colors[color_index]
 
     color_button_pressed = False
+
+    # Initial position
+    prev_x, prev_y = pygame.mouse.get_pos()
 
     running = True
     while running:
@@ -69,22 +78,30 @@ def main():
 
         # Change a pen color by button 3 (right click)
         if button3:
-            # Change a pen color by button3 trigger
+            # On click
             if not color_button_pressed:
+                # Change a pen color
                 color_index += 1
                 if color_index >= len(pen_colors):
                     color_index = 0
                 current_pen_color = pen_colors[color_index]
-            color_button_pressed = True
+
+                color_button_pressed = True
         else:
             if color_button_pressed:
                 color_button_pressed = False
 
-        # Draw a dot by button 1 (left click)
+        # Draw a line by button 1 (left click)
         if button1:
-            # Fix a drawing position by canvas's position
-            draw_pos = (x - CANVAS_BEGIN[0], y - CANVAS_BEGIN[1])
-            pygame.draw.circle(canvas, current_pen_color, draw_pos, 3.0)
+            pygame.draw.line(
+                canvas,
+                current_pen_color,
+                _fix_draw_pos(prev_x, prev_y),
+                _fix_draw_pos(x, y),
+                2,
+            )
+
+        prev_x, prev_y = x, y
 
         pygame.display.flip()
 
