@@ -55,8 +55,8 @@ class Ball:
         if (self.pos.x + self.radius) >= screen.get_width() or (
             self.pos.y + self.radius
         ) >= screen.get_height():
-            self.v.x = 0
-            self.v.y = 0
+            self.v.x = -self.v.x * 0.8
+            self.v.y = -self.v.y * 0.8
 
         self.life_sec -= 1 * dt
 
