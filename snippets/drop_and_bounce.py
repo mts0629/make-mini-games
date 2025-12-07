@@ -14,6 +14,7 @@ class Ball:
         v (pygame.Vector2): Initial velocity (x, y).
         radius (int): Radius.
         color (str): Color.
+        life_sec (int): Lifetime in seconds.
     """
 
     def __init__(self, pos, v, theta, radius, color):
@@ -43,21 +44,28 @@ class Ball:
             screen (pygame.Surface): Drawing screen.
             dt (float): Elapsed time[sec] from the previous frame.
         """
+        # Gravity
+        self.v.y += (9.8 * 50) * dt
+
+        # Bounce at the screen's edge
+        if (self.pos.x - self.radius) < 0 :
+            self.v.x = -self.v.x * 0.7
+            self.pos.x = self.radius
+        elif (self.pos.x + self.radius) > screen.get_width():
+            self.v.x = -self.v.x * 0.7
+            self.pos.x = screen.get_width() - self.radius
+        if (self.pos.y - self.radius) < 0:
+            self.v.y = -self.v.y * 0.7
+            self.pos.y = self.radius
+        elif (self.pos.y + self.radius) > screen.get_height():
+            self.v.y = -self.v.y * 0.7
+            self.pos.y = screen.get_height() - self.radius
 
         # Projectile motion
         self.pos.x += self.v.x * dt
         self.pos.y += self.v.y * dt
 
-        # Gravity
-        self.v.y += (9.8 * 50) * dt
-
-        # Stop at the screen's edge
-        if (self.pos.x + self.radius) >= screen.get_width() or (
-            self.pos.y + self.radius
-        ) >= screen.get_height():
-            self.v.x = -self.v.x * 0.8
-            self.v.y = -self.v.y * 0.8
-
+        # Decrease lifetime
         self.life_sec -= 1 * dt
 
     def draw(self, screen):
@@ -98,8 +106,13 @@ def main():
 
     balls = []
 
-    pressed = False
+    # Help text
+    font = pygame.font.Font(pygame.font.get_default_font(), 20)
+    help_text = font.render(
+        "Click: drop a ball", True, (255, 255, 255)
+    )
 
+    pressed = False
     running = True
     while running:
         for event in pygame.event.get():
@@ -112,6 +125,7 @@ def main():
         x, y = pygame.mouse.get_pos()
         button1, _, _ = pygame.mouse.get_pressed()
 
+        # Drop ball on left click
         if button1:
             if not pressed:
                 pos = pygame.Vector2(x, y)
@@ -124,12 +138,18 @@ def main():
                 pressed = False
 
         for ball in balls:
-            ball.draw(screen)
             ball.move(screen, dt)
+            ball.draw(screen)
 
+        # Delete dead balls
         balls = [
             ball for ball in balls if ball.is_alive()
         ]
+
+        for ball in balls:
+            ball.draw(screen)
+
+        screen.blit(help_text, (5, 5))
 
         pygame.display.flip()
 
