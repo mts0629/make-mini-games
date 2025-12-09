@@ -37,6 +37,28 @@ class Ball:
     def is_alive(self):
         return self.life_sec > 0
 
+    def check_collide(self, balls):
+        for ball in balls:
+            dx = self.pos.x - ball.pos.x
+            dy = self.pos.y - ball.pos.y
+
+            if dx * dx + dy * dy < self.radius * self.radius:
+                if dx < self.radius * 2:
+                    if self.pos.x < ball.pos.x:
+                        self.pos.x = ball.pos.x - self.radius * 2
+                    else:
+                        self.pos.x = ball.pos.x + self.radius * 2
+                    self.v.x = -self.v.x
+
+                if dy < self.radius * 2:
+                    if self.pos.y < ball.pos.y:
+                        self.pos.y = ball.pos.y - self.radius * 2
+                    else:
+                        self.pos.y = ball.pos.y + self.radius * 2
+                    self.v.y = -self.v.y
+
+
+
     def move(self, screen, dt):
         """Move on the screen.
 
@@ -138,6 +160,8 @@ def main():
                 pressed = False
 
         for ball in balls:
+            others = [b for b in balls if not b == ball]
+            ball.check_collide(others)
             ball.move(screen, dt)
             ball.draw(screen)
 
