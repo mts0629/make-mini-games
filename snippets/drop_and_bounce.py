@@ -42,19 +42,23 @@ class Ball:
             dx = self.pos.x - ball.pos.x
             dy = self.pos.y - ball.pos.y
 
-            if dx * dx + dy * dy < self.radius * self.radius:
-                if dx < self.radius * 2:
+            d_sq = math.pow(dx, 2) + math.pow(dy, 2)
+            r = self.radius + ball.radius
+            r_sq = math.pow(r, 2)
+
+            if d_sq < r_sq:
+                if dx < r:
                     if self.pos.x < ball.pos.x:
-                        self.pos.x = ball.pos.x - self.radius * 2
+                        self.pos.x = ball.pos.x - r
                     else:
-                        self.pos.x = ball.pos.x + self.radius * 2
+                        self.pos.x = ball.pos.x + r
                     self.v.x = -self.v.x
 
-                if dy < self.radius * 2:
+                if dy < r:
                     if self.pos.y < ball.pos.y:
-                        self.pos.y = ball.pos.y - self.radius * 2
+                        self.pos.y = ball.pos.y - r
                     else:
-                        self.pos.y = ball.pos.y + self.radius * 2
+                        self.pos.y = ball.pos.y + r
                     self.v.y = -self.v.y
 
 
