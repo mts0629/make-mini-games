@@ -47,20 +47,19 @@ class Ball:
             r_sq = math.pow(r, 2)
 
             if d_sq < r_sq:
+                # Correct position
+                d = math.sqrt(d_sq)
+                overlap = r - d
+                ox = overlap * (dx / d)
+                oy = overlap * (dy / d)
+                self.pos.x += ox
+                self.pos.y += oy
+
+                # Bounce
                 if dx < r:
-                    if self.pos.x < ball.pos.x:
-                        self.pos.x = ball.pos.x - r
-                    else:
-                        self.pos.x = ball.pos.x + r
-                    self.v.x = -self.v.x
-
+                     self.v.x = -0.7 * self.v.x
                 if dy < r:
-                    if self.pos.y < ball.pos.y:
-                        self.pos.y = ball.pos.y - r
-                    else:
-                        self.pos.y = ball.pos.y + r
-                    self.v.y = -self.v.y
-
+                     self.v.y = -0.7 * self.v.y
 
 
     def move(self, screen, dt):
@@ -165,8 +164,8 @@ def main():
 
         for ball in balls:
             others = [b for b in balls if not b == ball]
-            ball.check_collide(others)
             ball.move(screen, dt)
+            ball.check_collide(others)
             ball.draw(screen)
 
         # Delete dead balls
