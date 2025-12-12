@@ -57,9 +57,11 @@ class Ball:
 
                 # Bounce
                 if dx < r:
-                     self.v.x = -0.7 * self.v.x
+                     self.v.x = -0.8 * self.v.x
+                     ball.v.x = -0.8 * ball.v.x
                 if dy < r:
-                     self.v.y = -0.7 * self.v.y
+                     self.v.y = -0.8 * self.v.y
+                     ball.v.x = -0.8 * ball.v.x
 
 
     def move(self, screen, dt):
@@ -74,16 +76,16 @@ class Ball:
 
         # Bounce at the screen's edge
         if (self.pos.x - self.radius) < 0 :
-            self.v.x = -self.v.x * 0.7
+            self.v.x = -0.8 * self.v.x
             self.pos.x = self.radius
         elif (self.pos.x + self.radius) > screen.get_width():
-            self.v.x = -self.v.x * 0.7
+            self.v.x = -0.8 * self.v.x
             self.pos.x = screen.get_width() - self.radius
         if (self.pos.y - self.radius) < 0:
-            self.v.y = -self.v.y * 0.7
+            self.v.y = -0.8 * self.v.y
             self.pos.y = self.radius
         elif (self.pos.y + self.radius) > screen.get_height():
-            self.v.y = -self.v.y * 0.7
+            self.v.y = -0.8 * self.v.y
             self.pos.y = screen.get_height() - self.radius
 
         # Projectile motion
