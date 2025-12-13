@@ -37,7 +37,7 @@ class Ball:
     def is_alive(self):
         return self.life_sec > 0
 
-    def check_collide(self, balls):
+    def check_collide(self, screen, balls):
         for ball in balls:
             dx = self.pos.x - ball.pos.x
             dy = self.pos.y - ball.pos.y
@@ -57,25 +57,14 @@ class Ball:
 
                 # Bounce
                 if dx < r:
-                     self.v.x = -0.8 * self.v.x
-                     ball.v.x = -0.8 * ball.v.x
+                    self.v.x = -0.8 * self.v.x
+                    ball.v.x = -0.8 * ball.v.x
                 if dy < r:
-                     self.v.y = -0.8 * self.v.y
-                     ball.v.x = -0.8 * ball.v.x
-
-
-    def move(self, screen, dt):
-        """Move on the screen.
-
-        Args:
-            screen (pygame.Surface): Drawing screen.
-            dt (float): Elapsed time[sec] from the previous frame.
-        """
-        # Gravity
-        self.v.y += (9.8 * 50) * dt
+                    self.v.y = -0.8 * self.v.y
+                    ball.v.x = -0.8 * ball.v.x
 
         # Bounce at the screen's edge
-        if (self.pos.x - self.radius) < 0 :
+        if (self.pos.x - self.radius) < 0:
             self.v.x = -0.8 * self.v.x
             self.pos.x = self.radius
         elif (self.pos.x + self.radius) > screen.get_width():
@@ -87,6 +76,16 @@ class Ball:
         elif (self.pos.y + self.radius) > screen.get_height():
             self.v.y = -0.8 * self.v.y
             self.pos.y = screen.get_height() - self.radius
+
+    def move(self, screen, dt):
+        """Move on the screen.
+
+        Args:
+            screen (pygame.Surface): Drawing screen.
+            dt (float): Elapsed time[sec] from the previous frame.
+        """
+        # Gravity
+        self.v.y += (9.8 * 50) * dt
 
         # Projectile motion
         self.pos.x += self.v.x * dt
@@ -135,9 +134,7 @@ def main():
 
     # Help text
     font = pygame.font.Font(pygame.font.get_default_font(), 20)
-    help_text = font.render(
-        "Click: drop a ball", True, (255, 255, 255)
-    )
+    help_text = font.render("Click: drop a ball", True, (255, 255, 255))
 
     pressed = False
     running = True
@@ -167,13 +164,11 @@ def main():
         for ball in balls:
             others = [b for b in balls if not b == ball]
             ball.move(screen, dt)
-            ball.check_collide(others)
+            ball.check_collide(screen, others)
             ball.draw(screen)
 
         # Delete dead balls
-        balls = [
-            ball for ball in balls if ball.is_alive()
-        ]
+        balls = [ball for ball in balls if ball.is_alive()]
 
         for ball in balls:
             ball.draw(screen)
