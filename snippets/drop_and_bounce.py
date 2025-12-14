@@ -17,6 +17,8 @@ DROP_ANGLE_RANGE = [30, 150]
 LIFE_SEC = 10
 # Radius of balls
 RADIUS = 5
+# Friction coefficient
+FRICTION = 0.999
 
 
 class Ball:
@@ -27,6 +29,7 @@ class Ball:
         self.radius = radius
         self.color = pygame.Color(0, 255, 0)
         self.life_sec = LIFE_SEC
+        self.on_ground = False
 
     def is_alive(self):
         return self.life_sec > 0
@@ -53,31 +56,41 @@ class Ball:
                 self.d_pos += (d_center - math.sqrt(dist_sq)) * d.normalize()
                 # Bounce
                 if d.x < d_center:
-                    self.v.x = -COR * self.v.x
+                    self.v.x *= -COR
                 if d.y < d_center:
-                    self.v.y = -COR * self.v.y
+                    self.v.y *= -COR
+
+            if self.on_ground:
+                self.v.x *= FRICTION
 
     def update(self, screen, dt):
         self.pos += self.d_pos
+        self.on_ground = False
 
         # Bounce at the screen's edge
         if (self.pos.x - self.radius) < 0:
-            self.v.x = -COR * self.v.x
+            self.v.x *= -COR
             self.pos.x = self.radius
         elif (self.pos.x + self.radius) > screen.get_width():
-            self.v.x = -COR * self.v.x
+            self.v.x *= -COR
             self.pos.x = screen.get_width() - self.radius
         if (self.pos.y - self.radius) < 0:
-            self.v.y = -COR * self.v.y
+            self.v.y *= -COR
             self.pos.y = self.radius
         elif (self.pos.y + self.radius) > screen.get_height():
-            self.v.y = -COR * self.v.y
+            self.v.y *= -COR
             self.pos.y = screen.get_height() - self.radius
+            self.on_ground = True
 
         # Decrease lifetime
         self.life_sec -= 1 * dt
 
     def draw(self, screen):
+        if self.on_ground:
+            self.color = pygame.Color(255, 0, 0)
+        else:
+            self.color = pygame.Color(0, 255, 0)
+
         if self.is_alive():
             pygame.draw.circle(screen, self.color, self.pos, self.radius)
 
