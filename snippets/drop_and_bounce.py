@@ -5,127 +5,91 @@ import random
 
 import pygame
 
+# Scale for gravity
+SCALE = 50
+# Coefficient of restitution
+COR = 0.8
+# Drop speed
+SPEED = 200
+# Range of drop angle
+DROP_ANGLE_RANGE = [30, 150]
+# Lifetime of balls
+LIFE_SEC = 10
+# Radius of balls
+RADIUS = 5
+
 
 class Ball:
-    """Ball object.
-
-    Attributes:
-        pos (pygame.Vector2): Initial position (x, y).
-        v (pygame.Vector2): Initial velocity (x, y).
-        radius (int): Radius.
-        color (str): Color.
-        life_sec (int): Lifetime in seconds.
-    """
-
-    def __init__(self, pos, v, theta, radius, color):
-        """Initialize.
-
-        Args:
-            pos (pygame.Vector2): Initial position (x, y).
-            v (float): Magnitude of an initial velocity.
-            theta (float): Angle of an initial velocity.
-            radius (int): Radius.
-            color (str): Color.
-        """
-
+    def __init__(self, pos, v, radius):
         self.pos = pos.copy()
-        self.v = pygame.Vector2(v * math.cos(theta), v * math.sin(theta))
+        self.d_pos = pygame.Vector2(0, 0)
+        self.v = v.copy()
         self.radius = radius
-        self.color = color
-        self.life_sec = 10
+        self.color = pygame.Color(0, 255, 0)
+        self.life_sec = LIFE_SEC
 
     def is_alive(self):
         return self.life_sec > 0
 
-    def check_collide(self, screen, balls):
+    def move(self, dt):
+        # Add gravity
+        self.v.y += SCALE * 9.8 * dt
+        self.pos += self.v * dt
+
+    def check_collide(self, balls):
+        self.d_pos = pygame.Vector2(0, 0)
+
         for ball in balls:
-            dx = self.pos.x - ball.pos.x
-            dy = self.pos.y - ball.pos.y
+            if ball == self:
+                continue
 
-            d_sq = math.pow(dx, 2) + math.pow(dy, 2)
-            r = self.radius + ball.radius
-            r_sq = math.pow(r, 2)
+            d = self.pos - ball.pos
+            dist_sq = d.magnitude_squared()
 
-            if d_sq < r_sq:
+            d_center = self.radius + ball.radius
+
+            if dist_sq < math.pow(d_center, 2):
                 # Correct position
-                d = math.sqrt(d_sq)
-                overlap = r - d
-                ox = overlap * (dx / d)
-                oy = overlap * (dy / d)
-                self.pos.x += ox
-                self.pos.y += oy
-
+                self.d_pos += (d_center - math.sqrt(dist_sq)) * d.normalize()
                 # Bounce
-                if dx < r:
-                    self.v.x = -0.8 * self.v.x
-                    ball.v.x = -0.8 * ball.v.x
-                if dy < r:
-                    self.v.y = -0.8 * self.v.y
-                    ball.v.x = -0.8 * ball.v.x
+                if d.x < d_center:
+                    self.v.x = -COR * self.v.x
+                if d.y < d_center:
+                    self.v.y = -COR * self.v.y
+
+    def update(self, screen, dt):
+        self.pos += self.d_pos
 
         # Bounce at the screen's edge
         if (self.pos.x - self.radius) < 0:
-            self.v.x = -0.8 * self.v.x
+            self.v.x = -COR * self.v.x
             self.pos.x = self.radius
         elif (self.pos.x + self.radius) > screen.get_width():
-            self.v.x = -0.8 * self.v.x
+            self.v.x = -COR * self.v.x
             self.pos.x = screen.get_width() - self.radius
         if (self.pos.y - self.radius) < 0:
-            self.v.y = -0.8 * self.v.y
+            self.v.y = -COR * self.v.y
             self.pos.y = self.radius
         elif (self.pos.y + self.radius) > screen.get_height():
-            self.v.y = -0.8 * self.v.y
+            self.v.y = -COR * self.v.y
             self.pos.y = screen.get_height() - self.radius
-
-    def move(self, screen, dt):
-        """Move on the screen.
-
-        Args:
-            screen (pygame.Surface): Drawing screen.
-            dt (float): Elapsed time[sec] from the previous frame.
-        """
-        # Gravity
-        self.v.y += (9.8 * 50) * dt
-
-        # Projectile motion
-        self.pos.x += self.v.x * dt
-        self.pos.y += self.v.y * dt
 
         # Decrease lifetime
         self.life_sec -= 1 * dt
 
     def draw(self, screen):
-        """Draw on the screen.
-
-        Args:
-            screen (pygame.Surface): Drawing screen.
-        """
-
-        pygame.draw.circle(screen, self.color, self.pos, self.radius)
+        if self.is_alive():
+            pygame.draw.circle(screen, self.color, self.pos, self.radius)
 
 
 def deg2rad(deg):
-    """Convert an angle from degree to radian.
-
-    Args:
-        deg (float): Angle[deg].
-
-    Return:
-        (float): Angle[rad].
-    """
-
     return deg / 180 * math.pi
 
 
 def main():
-    """Main loop."""
-
     pygame.init()
 
     screen = pygame.display.set_mode((640, 480))
-
-    radius = 5
-    v = 300
 
     clock = pygame.time.Clock()
     dt = 0
@@ -134,14 +98,17 @@ def main():
 
     # Help text
     font = pygame.font.Font(pygame.font.get_default_font(), 20)
-    help_text = font.render("Click: drop a ball", True, (255, 255, 255))
+    help_text = font.render("Click: drop a ball/Esc: quit", True, (255, 255, 255))
 
-    pressed = False
+    clicked = False
     running = True
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+
+        if pygame.key.get_pressed()[pygame.K_ESCAPE]:
+            running = False
 
         screen.fill("black")
 
@@ -151,27 +118,27 @@ def main():
 
         # Drop ball on left click
         if button1:
-            if not pressed:
-                pos = pygame.Vector2(x, y)
-                balls.append(
-                    Ball(pos, v, deg2rad(-random.uniform(30, 120)), radius, "green"),
+            if not clicked:
+                theta = -random.uniform(*DROP_ANGLE_RANGE)
+                v = SPEED * pygame.Vector2(
+                    math.cos(deg2rad(theta)), math.sin(deg2rad(theta))
                 )
-                pressed = True
+                balls.append(Ball(pygame.Vector2(x, y), v, RADIUS))
+                clicked = True
         else:
-            if pressed:
-                pressed = False
+            if clicked:
+                clicked = False
 
         for ball in balls:
-            others = [b for b in balls if not b == ball]
-            ball.move(screen, dt)
-            ball.check_collide(screen, others)
+            ball.move(dt)
+
+        for ball in balls:
+            ball.check_collide(balls)
+            ball.update(screen, dt)
             ball.draw(screen)
 
         # Delete dead balls
         balls = [ball for ball in balls if ball.is_alive()]
-
-        for ball in balls:
-            ball.draw(screen)
 
         screen.blit(help_text, (5, 5))
 
