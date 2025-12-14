@@ -14,7 +14,7 @@ SPEED = 200
 # Range of drop angle
 DROP_ANGLE_RANGE = [30, 150]
 # Lifetime of balls
-LIFE_SEC = 10
+LIFE_SEC = 5
 # Radius of balls
 RADIUS = 5
 # Friction coefficient
@@ -83,7 +83,8 @@ class Ball:
             self.on_ground = True
 
         # Decrease lifetime
-        self.life_sec -= 1 * dt
+        if self.on_ground:
+            self.life_sec -= 1 * dt
 
     def draw(self, screen):
         if self.on_ground:
